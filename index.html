@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ja" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ベトナム語 単語帳・単語テスト</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: M PLUS Rounded 1c -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-zinc-300 selection:text-zinc-700 antialiased relative">
+
+  <!-- TOP STICKY HEADER -->
+<header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-zinc-300/80 shadow-sm">
+  <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3 cursor-pointer" onclick="showHomeView()">
+      <!-- VN Badge with Pen Icon -->
+      <div class="px-2.5 h-10 rounded-xl bg-zinc-600 text-white flex items-center space-x-1.5 font-extrabold text-sm shadow-md shadow-zinc-400/20">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+        </svg>
+      </div>
+
+      <div>
+        <h1 class="text-base font-extrabold text-zinc-700 leading-tight tracking-wide">ベトナム語 単語テスト</h1>
+        <p class="text-xs text-zinc-500 font-bold" id="categorySubtitle">全語彙マスター</p>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center border border-zinc-300/80" title="音効 ON/OFF">
+        <svg id="soundIconOn" class="w-5 h-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+        <svg id="soundIconOff" class="w-5 h-5 hidden text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+      </button>
+      
+      <button onclick="showHomeView()" class="p-2.5 rounded-xl text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center border border-zinc-300/80" title="ホームへ戻る">
+        <svg class="w-5 h-5 text-zinc-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 001 1m-6 0h6"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+  <!-- MAIN CONTENT WRAPPER -->
+  <main class="max-w-3xl mx-auto px-4 py-6 w-full flex-grow flex flex-col justify-center">
+
+    <!-- HOME / SETUP SCREEN -->
+    <section id="homeScreen" class="animate-fade-in space-y-6">
+
+      <!-- Settings Panel -->
+      <div class="bg-white rounded-2xl p-5 border border-zinc-300 shadow-sm space-y-4">
+        <h3 class="text-xs font-extrabold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+          <svg class="w-4 h-4 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          演習オプション設定
+        </h3>
+
+        <div class="grid grid-cols-1 gap-3">
+          <label class="flex items-center justify-between p-3.5 rounded-xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 cursor-pointer transition-colors">
+            <span class="text-sm font-bold text-zinc-800">出題順序をシャッフルする</span>
+            <input type="checkbox" id="shuffleQuestionsToggle" checked class="w-4 h-4 text-zinc-700 rounded focus:ring-zinc-700 accent-zinc-700">
+          </label>
+        </div>
+      </div>
+
+      <!-- Category Selection Grid -->
+      <div class="space-y-3">
+        <h3 class="text-xs font-extrabold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+          <svg class="w-4 h-4 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          コースを選択してスタート
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div class="flex flex-col">
+            <button onclick="openModeModal('all')" class="p-5 rounded-2xl bg-white border border-zinc-300 hover:border-zinc-700 hover:shadow-md transition-all text-left group flex flex-col justify-between flex-grow">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-extrabold text-base text-zinc-700 group-hover:underline">すべての単語</span>
+                <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300">全問</span>
+              </div>
+              <p class="text-xs text-zinc-500 font-medium">登録されているすべての単語から出題されます。</p>
+            </button>
+            <button id="mistakesBtn-all" onclick="startMistakesPractice('all')" class="hidden mt-2 px-3 py-2.5 rounded-xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              間違えた単語のみ復習 (<span id="mistakesCount-all">0</span>)
+            </button>
+          </div>
+
+          <!-- CATEGORY: ANIMALS -->
+          <div class="flex flex-col">
+            <button onclick="openModeModal('animals')" class="p-5 rounded-2xl bg-white border border-zinc-300 hover:border-zinc-700 hover:shadow-md transition-all text-left group flex flex-col justify-between flex-grow">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-extrabold text-base text-zinc-700 group-hover:underline">動物</span>
+                <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300">50語</span>
+              </div>
+              <p class="text-xs text-zinc-500 font-medium">犬、猫、ライオン、鳥、水生生物などの動物表現。</p>
+            </button>
+            <button id="mistakesBtn-animals" onclick="startMistakesPractice('animals')" class="hidden mt-2 px-3 py-2.5 rounded-xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              間違えた単語のみ復習 (<span id="mistakesCount-animals">0</span>)
+            </button>
+          </div>
+
+          <!-- CATEGORY: JOBS -->
+          <div class="flex flex-col">
+            <button onclick="openModeModal('jobs')" class="p-5 rounded-2xl bg-white border border-zinc-300 hover:border-zinc-700 hover:shadow-md transition-all text-left group flex flex-col justify-between flex-grow">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-extrabold text-base text-zinc-700 group-hover:underline">職業</span>
+                <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300">50語</span>
+              </div>
+              <p class="text-xs text-zinc-500 font-medium">医師、教師、エンジニア、警察官などの職業単語。</p>
+            </button>
+            <button id="mistakesBtn-jobs" onclick="startMistakesPractice('jobs')" class="hidden mt-2 px-3 py-2.5 rounded-xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              間違えた単語のみ復習 (<span id="mistakesCount-jobs">0</span>)
+            </button>
+          </div>
+
+          <!-- CATEGORY: BUILDINGS / PLACES -->
+          <div class="flex flex-col">
+            <button onclick="openModeModal('buildings')" class="p-5 rounded-2xl bg-white border border-zinc-300 hover:border-zinc-700 hover:shadow-md transition-all text-left group flex flex-col justify-between flex-grow">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-extrabold text-base text-zinc-700 group-hover:underline">建物・場所</span>
+                <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300">50語</span>
+              </div>
+              <p class="text-xs text-zinc-500 font-medium">学校、病院、銀行、駅、公園など。</p>
+            </button>
+            <button id="mistakesBtn-buildings" onclick="startMistakesPractice('buildings')" class="hidden mt-2 px-3 py-2.5 rounded-xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              間違えた単語のみ復習 (<span id="mistakesCount-buildings">0</span>)
+            </button>
+          </div>
+
+          <div class="flex flex-col">
+            <button onclick="openModeModal('pronouns')" class="p-5 rounded-2xl bg-white border border-zinc-300 hover:border-zinc-700 hover:shadow-md transition-all text-left group flex flex-col justify-between flex-grow">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-extrabold text-base text-zinc-700 group-hover:underline">代名詞・人称</span>
+                <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300">9語</span>
+              </div>
+              <p class="text-xs text-zinc-500 font-medium">私、あなた、彼、人称代名詞など。</p>
+            </button>
+            <button id="mistakesBtn-pronouns" onclick="startMistakesPractice('pronouns')" class="hidden mt-2 px-3 py-2.5 rounded-xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              間違えた単語のみ復習 (<span id="mistakesCount-pronouns">0</span>)
+            </button>
+          </div>
+
+          <div class="flex flex-col">
+            <button onclick="openModeModal('verbs')" class="p-5 rounded-2xl bg-white border border-zinc-300 hover:border-zinc-700 hover:shadow-md transition-all text-left group flex flex-col justify-between flex-grow">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-extrabold text-base text-zinc-700 group-hover:underline">基本動詞</span>
+                <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300">13語</span>
+              </div>
+              <p class="text-xs text-zinc-500 font-medium">行く、食べる、飲む、話す、買うなど。</p>
+            </button>
+            <button id="mistakesBtn-verbs" onclick="startMistakesPractice('verbs')" class="hidden mt-2 px-3 py-2.5 rounded-xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              間違えた単語のみ復習 (<span id="mistakesCount-verbs">0</span>)
+            </button>
+          </div>
+
+          <div class="flex flex-col">
+            <button onclick="openModeModal('nouns')" class="p-5 rounded-2xl bg-white border border-zinc-300 hover:border-zinc-700 hover:shadow-md transition-all text-left group flex flex-col justify-between flex-grow">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-extrabold text-base text-zinc-700 group-hover:underline">基本名詞</span>
+                <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300">10語</span>
+              </div>
+              <p class="text-xs text-zinc-500 font-medium">水、ご飯、家、時間、お金など。</p>
+            </button>
+            <button id="mistakesBtn-nouns" onclick="startMistakesPractice('nouns')" class="hidden mt-2 px-3 py-2.5 rounded-xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              間違えた単語のみ復習 (<span id="mistakesCount-nouns">0</span>)
+            </button>
+          </div>
+
+          <div class="flex flex-col">
+            <button onclick="openModeModal('adjectives')" class="p-5 rounded-2xl bg-white border border-zinc-300 hover:border-zinc-700 hover:shadow-md transition-all text-left group flex flex-col justify-between flex-grow">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-extrabold text-base text-zinc-700 group-hover:underline">形容詞・状態</span>
+                <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300">11語</span>
+              </div>
+              <p class="text-xs text-zinc-500 font-medium">美味しい、大きい、忙しい、高いなど。</p>
+            </button>
+            <button id="mistakesBtn-adjectives" onclick="startMistakesPractice('adjectives')" class="hidden mt-2 px-3 py-2.5 rounded-xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              間違えた単語のみ復習 (<span id="mistakesCount-adjectives">0</span>)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY WORD BOOK (PERSONAL VOCABULARY) -->
+      <div class="bg-white rounded-2xl p-5 border border-zinc-300 shadow-sm space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h3 class="text-xs font-extrabold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+            <svg class="w-4 h-4 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            マイ単語帳
+          </h3>
+          <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300"><span id="myWordsCount">0</span>語</span>
+        </div>
+        <p class="text-xs text-zinc-500 font-medium -mt-2">自分だけの単語を登録して演習できます。※タイピングモードのみ対応</p>
+
+        <!-- Add word form -->
+<div class="flex flex-col sm:flex-row gap-2.5">
+  <input type="text" id="myWordJp" placeholder="日本語" class="min-w-0 flex-1 px-3.5 py-2.5 rounded-xl border-2 border-zinc-300 focus:border-zinc-700 focus:outline-none text-sm font-bold text-zinc-700 bg-zinc-50/50 transition-colors">
+  <input type="text" id="myWordVn" placeholder="ベトナム語" class="min-w-0 flex-1 px-3.5 py-2.5 rounded-xl border-2 border-zinc-300 focus:border-zinc-700 focus:outline-none text-sm font-bold text-zinc-700 bg-zinc-50/50 transition-colors">
+  <button onclick="addMyWord()" class="px-6 py-2.5 rounded-xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 active:bg-zinc-950 transition-all shadow-md shadow-zinc-400/20 shrink-0 w-full sm:w-auto">
+    追加
+  </button>
+</div>
+        </div>
+        <p id="myWordError" class="hidden text-xs font-bold text-zinc-600 bg-zinc-100 border border-zinc-300 rounded-xl px-3.5 py-2">日本語とベトナム語の両方を入力してください。</p>
+
+        <!-- Word list -->
+        <div id="myWordsList" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+          <p class="text-xs text-zinc-400 font-bold text-center py-3">まだ単語が登録されていません。</p>
+        </div>
+
+        <!-- Practice buttons -->
+        <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
+          <button id="myBookPracticeBtn" onclick="startMyBookQuiz()" disabled class="flex-grow px-5 py-3 rounded-2xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 active:bg-zinc-950 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-md shadow-zinc-400/20">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            マイ単語帳で演習する
+          </button>
+          <button id="mistakesBtn-mybook" onclick="startMistakesPractice('mybook')" class="hidden px-5 py-3 rounded-2xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            間違えた単語のみ復習 (<span id="mistakesCount-mybook">0</span>)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CENTERED MODE SELECTION MODAL OVERLAY -->
+    <div id="modeModalOverlay" class="fixed inset-0 bg-zinc-700/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full border border-zinc-300 shadow-2xl space-y-6 animate-pop-in relative">
+        <!-- Close button -->
+        <button onclick="closeModeModal()" class="absolute top-5 right-5 p-2 text-zinc-400 hover:text-zinc-800 rounded-full hover:bg-zinc-100 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+
+        <div class="text-center space-y-1">
+          <span class="text-xs font-black text-zinc-400 uppercase tracking-widest">Select Practice Mode</span>
+          <h3 class="text-2xl font-black text-zinc-700">演習モードを選択</h3>
+          <p class="text-xs text-zinc-500 font-bold" id="modalCategoryName">カテゴリ名</p>
+        </div>
+
+        <!-- 2 Centered Cards for Modes -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          
+          <!-- MODE 1: TYPING -->
+          <button onclick="confirmStartQuiz('typing')" class="group p-6 rounded-2xl border-2 border-zinc-700 hover:border-zinc-700 bg-zinc-50 hover:bg-white transition-all text-center flex flex-col items-center justify-center space-y-3 shadow-sm hover:shadow-md">
+            <div class="w-14 h-14 rounded-2xl bg-zinc-700 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+              <!-- Keyboard Icon -->
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </div>
+            <div>
+              <div class="font-extrabold text-base text-zinc-700">タイピング</div>
+              <div class="text-xs font-bold text-zinc-400 mt-0.5">Typing Input</div>
+            </div>
+            <p class="text-xs text-zinc-500 leading-snug font-medium">キーボードで直接文字を入力して解答します。</p>
+          </button>
+
+          <!-- MODE 2: MULTIPLE CHOICE -->
+          <button onclick="confirmStartQuiz('multiple')" class="group p-6 rounded-2xl border-2 border-zinc-700 hover:border-zinc-700 bg-zinc-50 hover:bg-white transition-all text-center flex flex-col items-center justify-center space-y-3 shadow-sm hover:shadow-md">
+            <div class="w-14 h-14 rounded-2xl bg-zinc-700 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+              <!-- Grid / Choice Icon -->
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            </div>
+            <div>
+              <div class="font-extrabold text-base text-zinc-700">選択肢</div>
+              <div class="text-xs font-bold text-zinc-400 mt-0.5">Multiple Choices</div>
+            </div>
+            <p class="text-xs text-zinc-500 leading-snug font-medium">提示された4つの選択肢から正解を選びます。</p>
+          </button>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- QUIZ PLAY SCREEN -->
+    <section id="quizScreen" class="hidden my-auto py-2 space-y-5">
+      
+      <!-- Progress Bar & Category Status -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs font-extrabold text-zinc-500">
+          <div class="flex items-center gap-2">
+            <span id="questionCategoryTag" class="px-3 py-1 rounded-lg bg-zinc-700 text-white border border-zinc-300">カテゴリ</span>
+            <span id="questionModeBadge" class="px-2.5 py-1 rounded-lg bg-zinc-700 text-white">モード</span>
+          </div>
+          <span id="questionCounter" class="tracking-wider">Q 1 / 10</span>
+        </div>
+        <div class="w-full bg-zinc-200 h-2.5 rounded-full overflow-hidden p-0.5 border border-zinc-300">
+          <div id="progressBar" class="bg-zinc-700 h-full rounded-full transition-all duration-300 w-0"></div>
+        </div>
+      </div>
+
+      <!-- Question Card -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-zinc-300 shadow-sm space-y-6 animate-fade-in">
+        <div class="flex items-center justify-between">
+          <span id="questionTitle" class="text-xs font-black text-zinc-400 uppercase tracking-widest">問題</span>
+          <span id="questionTypeBadge" class="text-xs font-bold text-zinc-700 px-2.5 py-0.5 rounded-md bg-zinc-100 border border-zinc-700">入力形式</span>
+        </div>
+        
+        <div id="questionText" class="text-xl sm:text-2xl font-black text-zinc-700 leading-relaxed min-h-[3rem] tracking-tight">
+          <!-- Question text injected here -->
+        </div>
+
+        <!-- TYPING MODE CONTAINER -->
+        <div id="typingContainer" class="space-y-4">
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-zinc-500">ベトナム語を入力してください:</label>
+            <div class="flex flex-col sm:flex-row gap-2.5">
+              <input 
+                type="text" 
+                id="vietnameseInput" 
+                placeholder="" 
+                autocomplete="off" 
+                autocorrect="off" 
+                autocapitalize="off" 
+                spellcheck="false"
+                class="flex-grow px-4 py-3.5 rounded-2xl border-2 border-zinc-300 focus:border-zinc-700 focus:outline-none text-lg font-bold text-zinc-700 bg-zinc-50/50 transition-colors"
+              />
+              <button 
+                id="checkBtn" 
+                onclick="submitTypingAnswer()" 
+                class="px-7 py-3.5 rounded-2xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 active:bg-zinc-950 transition-all shadow-md shadow-zinc-400/20 shrink-0"
+              >
+                チェック
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MULTIPLE CHOICE MODE CONTAINER -->
+        <div id="multipleChoiceContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Choice Buttons injected via JS -->
+        </div>
+
+        <!-- Feedback / Correct Answer Callout -->
+        <div id="feedbackBox" class="hidden p-4 sm:p-5 rounded-2xl text-sm leading-relaxed transition-all animate-fade-in border">
+          <!-- Feedback content injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Bottom Action Navigation -->
+      <div class="flex items-center justify-between pt-1 pb-4">
+        <button id="prevBtn" onclick="prevQuestion()" class="px-5 py-3 rounded-2xl border border-zinc-300 text-zinc-700 font-bold text-sm hover:bg-zinc-700 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-zinc-700 transition-colors flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          前へ
+        </button>
+
+        <button id="nextBtn" onclick="nextQuestion()" disabled class="px-7 py-3 rounded-2xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 active:bg-zinc-950 disabled:opacity-40 disabled:hover:bg-zinc-700 transition-all flex items-center gap-2 shadow-md shadow-zinc-400/20">
+          次へ
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- RESULT SCREEN -->
+    <section id="resultScreen" class="hidden animate-fade-in space-y-6 my-auto py-4">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-zinc-300 shadow-sm text-center space-y-5">
+        <div id="resultIcon" class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-zinc-100 text-zinc-700 mb-1 border border-zinc-300">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-black text-zinc-700">演習完了！</h2>
+          <p class="text-zinc-500 text-xs sm:text-sm mt-1 font-bold">お疲れ様でした。結果を確認しましょう。</p>
+        </div>
+
+        <div class="py-4 px-8 bg-zinc-50 rounded-2xl inline-block border border-zinc-300">
+          <div class="text-xs font-black text-zinc-400 uppercase tracking-widest mb-1">スコア</div>
+          <div class="text-4xl sm:text-5xl font-black text-zinc-700">
+            <span id="scoreText">0</span> <span class="text-lg text-zinc-400 font-bold">/ <span id="totalScoreText">0</span></span>
+          </div>
+          <div id="accuracyText" class="text-xs font-extrabold text-zinc-700 mt-1">正解率 0%</div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button onclick="retryCurrentQuiz()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 transition-all flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            もう一度挑戦
+          </button>
+          
+          <button onclick="filterReviews('mistakes')" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-zinc-100 text-zinc-700 border border-zinc-300 font-extrabold text-sm hover:bg-zinc-700 hover:text-white transition-colors flex items-center justify-center gap-2 group">
+            <svg class="w-4 h-4 text-zinc-700 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            間違えた単語のみ表示
+          </button>
+
+          <button onclick="showHomeView()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl border border-zinc-300 text-zinc-700 font-extrabold text-sm hover:bg-zinc-100 transition-colors flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 001 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            トップへ
+          </button>
+        </div>
+      </div>
+
+      <!-- Review Section -->
+      <div class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-300 pb-3">
+          <h3 class="text-sm font-extrabold text-zinc-800 uppercase tracking-wider flex items-center gap-2">
+            <svg class="w-4 h-4 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            回答結果・詳細振り返り
+          </h3>
+
+          <div class="inline-flex p-1 bg-zinc-700 rounded-xl text-xs font-bold self-start sm:self-auto border border-zinc-300">
+            <button id="filterBtnAll" onclick="filterReviews('all')" class="px-3 py-1.5 rounded-lg transition-all bg-white text-zinc-700 shadow-sm">
+              すべて表示
+            </button>
+            <button id="filterBtnMistakes" onclick="filterReviews('mistakes')" class="px-3 py-1.5 rounded-lg text-zinc-300 hover:text-white transition-all">
+              間違えた単語のみ (<span id="mistakeBadgeCount">0</span>)
+            </button>
+            <button id="filterBtnCorrect" onclick="filterReviews('correct')" class="px-3 py-1.5 rounded-lg text-zinc-300 hover:text-white transition-all">
+              正解のみ
+            </button>
+          </div>
+        </div>
+
+        <div id="reviewContainer" class="space-y-3">
+          <!-- Reviews injected dynamically -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bg-white border-t border-zinc-300/80 text-center py-4 text-xs font-bold text-zinc-400 mt-6">
+    ベトナム語 単語暗記マスター &bull; Vietnamese-Japanese Vocab Book
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

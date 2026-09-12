@@ -1,0 +1,60 @@
+body {
+      font-family: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f4f4f5; /* zinc-100 */
+      color: #43434a; /* zinc-900 */
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .monochrome-highlight {
+      background-color: #e4e4e7; /* zinc-200 */
+      border-bottom: 2px solid #43434a; /* zinc-900 */
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+      font-weight: 700;
+      color: #1f1f26; /* zinc-950 */
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-pop-in {
+      animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f4f4f5;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #a1a1aa;
+      border-radius: 9999px;
+    }
+    .category-badge {
+  background-color: #3a3b40;
+  color: #ffffff !important; /* Forces text to remain white */
+}
