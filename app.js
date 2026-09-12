@@ -167,779 +167,156 @@
       { id: "p8", category: "pronouns", categoryLabel: "代名詞", jp: "どこ", answer: "đâu", altAnswers: ["dau"] },
       { id: "p9", category: "pronouns", categoryLabel: "代名詞", jp: "なぜ / どうして", answer: "tại sao", altAnswers: ["tai sao"] },
 
-      { id: "v1", category: "verbs", categoryLabel: "動詞", jp: "行く", answer: "đi", altAnswers: ["di"] },
-      { id: "v2", category: "verbs", categoryLabel: "動詞", jp: "来る / 到着する", answer: "đến", altAnswers: ["den"] },
-      { id: "v3", category: "verbs", categoryLabel: "動詞", jp: "帰る / 戻る", answer: "về", altAnswers: ["ve"] },
-      { id: "v4", category: "verbs", categoryLabel: "動詞", jp: "食べる", answer: "ăn", altAnswers: ["an"] },
-      { id: "v5", category: "verbs", categoryLabel: "動詞", jp: "飲む", answer: "uống", altAnswers: ["uong"] },
-      { id: "v6", category: "verbs", categoryLabel: "動詞", jp: "話す / 言う", answer: "nói", altAnswers: ["noi"] },
-      { id: "v7", category: "verbs", categoryLabel: "動詞", jp: "聞く", answer: "nghe", altAnswers: [] },
-      { id: "v8", category: "verbs", categoryLabel: "動詞", jp: "見る / 観る", answer: "xem", altAnswers: ["nhìn", "nhin"] },
-      { id: "v9", category: "verbs", categoryLabel: "動詞", jp: "知っている", answer: "biết", altAnswers: ["biet"] },
-      { id: "v10", category: "verbs", categoryLabel: "動詞", jp: "理解する / 分かる", answer: "hiểu", altAnswers: ["hieu"] },
-      { id: "v11", category: "verbs", categoryLabel: "動詞", jp: "買う", answer: "mua", altAnswers: [] },
-      { id: "v12", category: "verbs", categoryLabel: "動詞", jp: "欲しい / 〜したい", answer: "muốn", altAnswers: ["muon"] },
-      { id: "v13", category: "verbs", categoryLabel: "動詞", jp: "する / 作る / 働く", answer: "làm", altAnswers: ["lam"] },
-
-      { id: "n1", category: "nouns", categoryLabel: "名詞", jp: "水", answer: "nước", altAnswers: ["nuoc"] },
-      { id: "n2", category: "nouns", categoryLabel: "名詞", jp: "ご飯 / ごちそう", answer: "cơm", altAnswers: ["com"] },
-      { id: "n3", category: "nouns", categoryLabel: "名詞", jp: "家 / 住宅", answer: "nhà", altAnswers: ["nha"] },
-      { id: "n4", category: "nouns", categoryLabel: "名詞", jp: "お金", answer: "tiền", altAnswers: ["tien"] },
-      { id: "n5", category: "nouns", categoryLabel: "名詞", jp: "車 / 乗り物", answer: "xe", altAnswers: [] },
-      { id: "n6", category: "nouns", categoryLabel: "名詞", jp: "時間", answer: "thời gian", altAnswers: ["thoi gian"] },
-      { id: "n7", category: "nouns", categoryLabel: "名詞", jp: "今日", answer: "hôm nay", altAnswers: ["hom nay"] },
-      { id: "n8", category: "nouns", categoryLabel: "名詞", jp: "明日", answer: "ngày mai", altAnswers: ["ngay mai"] },
-      { id: "n9", category: "nouns", categoryLabel: "名詞", jp: "昨日", answer: "hôm qua", altAnswers: ["hom qua"] },
-      { id: "n10", category: "nouns", categoryLabel: "名詞", jp: "友達", answer: "bạn", altAnswers: ["ban"] },
-
-      { id: "a1", category: "adjectives", categoryLabel: "形容詞", jp: "美味しい", answer: "ngon", altAnswers: [] },
-      { id: "a2", category: "adjectives", categoryLabel: "形容詞", jp: "良い / 上級の", answer: "tốt", altAnswers: ["tot"] },
-      { id: "a3", category: "adjectives", categoryLabel: "形容詞", jp: "美しい / 綺麗な", answer: "đẹp", altAnswers: ["dep"] },
-      { id: "a4", category: "adjectives", categoryLabel: "形容詞", jp: "多い / たくさん", answer: "nhiều", altAnswers: ["nhieu"] },
-      { id: "a5", category: "adjectives", categoryLabel: "形容詞", jp: "少ない", answer: "ít", altAnswers: ["it"] },
-      { id: "a6", category: "adjectives", categoryLabel: "形容詞", jp: "高い (価格)", answer: "đắt", altAnswers: ["mắc", "dat", "mac"] },
-      { id: "a7", category: "adjectives", categoryLabel: "形容詞", jp: "安い", answer: "rẻ", altAnswers: ["re"] },
-      { id: "a8", category: "adjectives", categoryLabel: "形容詞", jp: "忙しい", answer: "bận", altAnswers: ["ban"] },
-      { id: "a9", category: "adjectives", categoryLabel: "形容詞", jp: "疲れた", answer: "mệt", altAnswers: ["met"] },
-      { id: "a10", category: "adjectives", categoryLabel: "形容詞", jp: "暑い", answer: "nóng", altAnswers: ["nong"] },
-      { id: "a11", category: "adjectives", categoryLabel: "形容詞", jp: "寒い / 冷たい", answer: "lạnh", altAnswers: ["lanh"] }
-    ];
-
-    // --- SOUND SYNTHESIS ---
-    let soundEnabled = true;
-    let audioCtx = null;
-
-    function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-    }
-
-    function toggleSound() {
-      soundEnabled = !soundEnabled;
-      document.getElementById('soundIconOn').classList.toggle('hidden', !soundEnabled);
-      document.getElementById('soundIconOff').classList.toggle('hidden', soundEnabled);
-    }
-
-    function playSound(type) {
-      if (!soundEnabled) return;
-      initAudio();
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-
-      const now = audioCtx.currentTime;
-
-      if (type === 'correct') {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, now); // C5
-        osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-        gain.gain.setValueAtTime(0.1, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.25);
-      } else if (type === 'incorrect') {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(220, now);
-        osc.frequency.setValueAtTime(180, now + 0.09);
-        gain.gain.setValueAtTime(0.12, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.22);
-      } else if (type === 'click') {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, now);
-        osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
-        gain.gain.setValueAtTime(0.03, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.03);
-      }
-    }
-
-    // --- APP STATE ---
-    let pendingCategory = 'all';
-    let currentQuizPool = [];
-    let currentIndex = 0;
-    let currentMode = 'typing'; // 'typing' or 'multiple'
-    let userAnswers = []; // stores { question, userInput, selectedOption, isCorrect, mode }
-    let currentFilter = 'all'; 
-
-    const categoryNamesMap = { 
-      all: "すべての単語", 
-      animals: "動物",
-      jobs: "職業",
-      buildings: "建物・場所",
-      pronouns: "代名詞・人称", 
-      verbs: "基本動詞", 
-      nouns: "基本名詞", 
-      adjectives: "形容詞・状態",
-      mybook: "マイ単語帳"
-    };
-
-    // --- PERSISTENCE: PROGRESS & PERSONAL WORD BOOK ---
-    const PROGRESS_STORAGE_KEY = 'vnVocab_progress_v1';
-    const MYWORDS_STORAGE_KEY = 'vnVocab_myWords_v1';
-
-    function loadProgress() {
-      try {
-        return JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY)) || {};
-      } catch (e) {
-        return {};
-      }
-    }
-
-    function saveProgress() {
-      try {
-        localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(progressData));
-      } catch (e) { /* storage unavailable, fail silently */ }
-    }
-
-    function loadMyWords() {
-      try {
-        return JSON.parse(localStorage.getItem(MYWORDS_STORAGE_KEY)) || [];
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function saveMyWords() {
-      try {
-        localStorage.setItem(MYWORDS_STORAGE_KEY, JSON.stringify(myWords));
-      } catch (e) { /* storage unavailable, fail silently */ }
-    }
-
-    let progressData = loadProgress();
-    let myWords = loadMyWords();
-    let currentCategoryKey = 'all';
-    let currentMistakesOnly = false;
-
-    function escapeHtml(str) {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
-
-    // --- MY WORD BOOK UI ---
-    function renderMyWordsList() {
-      const container = document.getElementById('myWordsList');
-      if (!myWords.length) {
-        container.innerHTML = '<p class="text-xs text-zinc-400 font-bold text-center py-3">まだ単語が登録されていません。</p>';
-        return;
-      }
-      container.innerHTML = myWords.map(w => `
-        <div class="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200">
-          <div class="text-xs sm:text-sm min-w-0 truncate">
-            <span class="font-extrabold text-zinc-700">${escapeHtml(w.jp)}</span>
-            <span class="text-zinc-400 mx-1.5">→</span>
-            <span class="font-bold text-zinc-600">${escapeHtml(w.answer)}</span>
-          </div>
-          <button onclick="deleteMyWord('${w.id}')" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors shrink-0" title="削除">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-      `).join('');
-    }
-
-    function updateMyBookCard() {
-      document.getElementById('myWordsCount').textContent = myWords.length;
-      const practiceBtn = document.getElementById('myBookPracticeBtn');
-      practiceBtn.disabled = myWords.length === 0;
-      updateMistakesButton('mybook');
-    }
-
-    function addMyWord() {
-      playSound('click');
-      const jpInput = document.getElementById('myWordJp');
-      const vnInput = document.getElementById('myWordVn');
-      const errorEl = document.getElementById('myWordError');
-
-      const jp = jpInput.value.trim();
-      const vn = vnInput.value.trim();
-
-      if (!jp || !vn) {
-        errorEl.classList.remove('hidden');
-        return;
-      }
-      errorEl.classList.add('hidden');
-
-      const id = 'my_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-
-      myWords.push({
-        id,
-        category: 'mybook',
-        categoryLabel: 'マイ単語帳',
-        jp,
-        answer: vn,
-        altAnswers: []
-      });
-
-      saveMyWords();
-      jpInput.value = '';
-      vnInput.value = '';
-      renderMyWordsList();
-      updateMyBookCard();
-      jpInput.focus();
-    }
-
-    function deleteMyWord(id) {
-      playSound('click');
-      myWords = myWords.filter(w => w.id !== id);
-      saveMyWords();
-
-      if (progressData.mybook && progressData.mybook.mistakeIds) {
-        progressData.mybook.mistakeIds = progressData.mybook.mistakeIds.filter(mid => mid !== id);
-        saveProgress();
-      }
-
-      renderMyWordsList();
-      updateMyBookCard();
-    }
-
-    function startMyBookQuiz() {
-      if (!myWords.length) return;
-      playSound('click');
-      currentMode = 'typing';
-      startQuiz('mybook', false);
-    }
-
-    // --- PROGRESS-BASED "MISTAKES ONLY" PRACTICE ---
-    function updateMistakesButton(categoryKey) {
-      const btn = document.getElementById(`mistakesBtn-${categoryKey}`);
-      if (!btn) return;
-      const countEl = document.getElementById(`mistakesCount-${categoryKey}`);
-      const prog = progressData[categoryKey];
-      const mistakeCount = prog && prog.mistakeIds ? prog.mistakeIds.length : 0;
-
-      if (prog && prog.completed && mistakeCount > 0) {
-        btn.classList.remove('hidden');
-        btn.classList.add('flex');
-        if (countEl) countEl.textContent = mistakeCount;
-      } else {
-        btn.classList.add('hidden');
-        btn.classList.remove('flex');
-      }
-    }
-
-    function updateAllCategoryButtons() {
-      Object.keys(categoryNamesMap).forEach(key => updateMistakesButton(key));
-    }
-
-    function startMistakesPractice(categoryKey) {
-      const prog = progressData[categoryKey];
-      if (!prog || !prog.mistakeIds || !prog.mistakeIds.length) return;
-
-      if (categoryKey === 'mybook') {
-        playSound('click');
-        currentMode = 'typing';
-        startQuiz('mybook', true);
-      } else {
-        openModeModal(categoryKey, true);
-      }
-    }
-
-    function shuffleArray(array) {
-      const arr = [...array];
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
-
-    // --- MODAL CONTROLS ---
-    let pendingMistakesOnly = false;
-
-    function openModeModal(categoryFilter, mistakesOnly) {
-      playSound('click');
-      pendingCategory = categoryFilter;
-      pendingMistakesOnly = !!mistakesOnly;
-      const catName = categoryNamesMap[categoryFilter] || "カテゴリー";
-      document.getElementById('modalCategoryName').textContent = pendingMistakesOnly
-        ? `対象: ${catName}（間違えた単語のみ）`
-        : `対象: ${catName}`;
-      document.getElementById('modeModalOverlay').classList.remove('hidden');
-    }
-
-    function closeModeModal() {
-      playSound('click');
-      document.getElementById('modeModalOverlay').classList.add('hidden');
-    }
-
-    function confirmStartQuiz(mode) {
-      playSound('click');
-      currentMode = mode;
-      document.getElementById('modeModalOverlay').classList.add('hidden');
-      startQuiz(pendingCategory, pendingMistakesOnly);
-    }
-
-    // --- NAVIGATION & VIEWS ---
-    function showHomeView() {
-      playSound('click');
-      document.getElementById('homeScreen').classList.remove('hidden');
-      document.getElementById('quizScreen').classList.add('hidden');
-      document.getElementById('resultScreen').classList.add('hidden');
-      document.getElementById('modeModalOverlay').classList.add('hidden');
-      document.getElementById('categorySubtitle').textContent = "全語彙マスター";
-      updateAllCategoryButtons();
-      updateMyBookCard();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function startQuiz(categoryFilter, mistakesOnly) {
-      const shuffleQuestions = document.getElementById('shuffleQuestionsToggle').checked;
-
-      // Reset dynamic multiple choice properties so they get regenerated freshly
-      rawQuestions.forEach(q => delete q._generatedChoices);
-
-      let filtered = [];
-      if (categoryFilter === 'mybook') {
-        filtered = [...myWords];
-      } else if (categoryFilter === 'all') {
-        filtered = [...rawQuestions];
-      } else {
-        filtered = rawQuestions.filter(q => q.category === categoryFilter);
-      }
-
-      if (mistakesOnly) {
-        const prog = progressData[categoryFilter];
-        const mistakeIds = (prog && prog.mistakeIds) || [];
-        filtered = filtered.filter(q => mistakeIds.includes(q.id));
-      }
-
-      if (!filtered.length) {
-        // Nothing to practice (e.g. mistakes list emptied elsewhere) - just go home.
-        showHomeView();
-        return;
-      }
-
-      if (shuffleQuestions) {
-        filtered = shuffleArray(filtered);
-      }
-
-      currentQuizPool = filtered;
-      currentCategoryKey = categoryFilter;
-      currentMistakesOnly = !!mistakesOnly;
-      currentIndex = 0;
-      userAnswers = new Array(currentQuizPool.length).fill(null);
-
-      const catText = categoryNamesMap[categoryFilter] || "単語";
-      const modeText = currentMode === 'typing' ? 'タイピング' : '4択選択';
-      const mistakesTag = currentMistakesOnly ? ' ・間違えた単語のみ' : '';
-      document.getElementById('categorySubtitle').textContent = `${catText}${mistakesTag} [${modeText}] (${currentQuizPool.length}問)`;
-
-      document.getElementById('homeScreen').classList.add('hidden');
-      document.getElementById('resultScreen').classList.add('hidden');
-      document.getElementById('quizScreen').classList.remove('hidden');
-
-      renderQuestion();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function retryCurrentQuiz() {
-      playSound('click');
-      rawQuestions.forEach(q => delete q._generatedChoices);
-      currentIndex = 0;
-      userAnswers = new Array(currentQuizPool.length).fill(null);
-      document.getElementById('resultScreen').classList.add('hidden');
-      document.getElementById('quizScreen').classList.remove('hidden');
-      renderQuestion();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // --- RENDER QUESTION ---
-    function renderQuestion() {
-      const q = currentQuizPool[currentIndex];
-      const answerState = userAnswers[currentIndex];
-
-      document.getElementById('questionCategoryTag').textContent = q.categoryLabel;
-      document.getElementById('questionModeBadge').textContent = currentMode === 'typing' ? 'タイピング' : '4択選択';
-      document.getElementById('questionTypeBadge').textContent = currentMode === 'typing' ? '文字入力' : '選択肢タップ';
-      document.getElementById('questionCounter').textContent = `Q ${currentIndex + 1} / ${currentQuizPool.length}`;
-      
-      const progressPercent = ((currentIndex + 1) / currentQuizPool.length) * 100;
-      document.getElementById('progressBar').style.width = `${progressPercent}%`;
-
-      document.getElementById('questionText').innerHTML = `ベトナム語で <span class="monochrome-highlight">${q.jp}</span>`;
-
-      const typingContainer = document.getElementById('typingContainer');
-      const multipleChoiceContainer = document.getElementById('multipleChoiceContainer');
-      const feedbackBox = document.getElementById('feedbackBox');
-
-      if (currentMode === 'typing') {
-        typingContainer.classList.remove('hidden');
-        multipleChoiceContainer.classList.add('hidden');
-
-        const inputEl = document.getElementById('vietnameseInput');
-        const checkBtn = document.getElementById('checkBtn');
-
-        if (answerState === null) {
-          inputEl.value = '';
-          inputEl.disabled = false;
-          checkBtn.disabled = false;
-          checkBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-          feedbackBox.classList.add('hidden');
-          setTimeout(() => inputEl.focus(), 50);
-        } else {
-          inputEl.value = answerState.userInput || '';
-          inputEl.disabled = true;
-          checkBtn.disabled = true;
-          checkBtn.classList.add('opacity-50', 'cursor-not-allowed');
-          renderFeedbackBox(q, answerState);
-        }
-
-      } else {
-        // MULTIPLE CHOICE MODE
-        typingContainer.classList.add('hidden');
-        multipleChoiceContainer.classList.remove('hidden');
-        multipleChoiceContainer.innerHTML = '';
-
-        // Generate 4 options (1 correct answer + 3 distinct distractors)
-        if (!q._generatedChoices) {
-          const distinctAnswersPool = Array.from(new Set(rawQuestions.filter(item => item.answer !== q.answer).map(item => item.answer)));
-          const shuffledOthers = shuffleArray(distinctAnswersPool);
-          const distractors = shuffledOthers.slice(0, 3);
-          q._generatedChoices = shuffleArray([q.answer, ...distractors]);
-        }
-
-        q._generatedChoices.forEach((choice, idx) => {
-          const btn = document.createElement('button');
-          btn.className = `w-full p-4 rounded-2xl border-2 font-extrabold text-left transition-all flex items-center justify-between text-base ${
-            answerState === null 
-              ? 'border-zinc-200 bg-zinc-50 hover:bg-white hover:border-zinc-900 text-zinc-900 shadow-sm' 
-              : 'border-zinc-200 bg-zinc-50 text-zinc-400 opacity-60 cursor-not-allowed'
-          }`;
-
-          const labels = ['A', 'B', 'C', 'D'];
-          btn.innerHTML = `
-            <div class="flex items-center gap-3">
-              <span class="w-7 h-7 rounded-lg bg-zinc-200 text-zinc-800 flex items-center justify-center font-black text-xs shrink-0">${labels[idx]}</span>
-              <span>${choice}</span>
-            </div>
-          `;
-
-            if (answerState !== null) {
-            if (choice === q.answer) {
-              btn.className = "w-full p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-600 text-white font-extrabold text-left flex items-center justify-between shadow-md";
-              btn.innerHTML += `<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>`;
-            } else if (answerState.selectedOption === choice && !answerState.isCorrect) {
-              btn.className = "w-full p-4 rounded-2xl border-2 border-rose-700 bg-rose-50 text-rose-800 font-extrabold text-left flex items-center justify-between";
-              btn.innerHTML += `<svg class="w-5 h-5 text-rose-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>`;
-            }
-          } else {
-            btn.onclick = () => submitMultipleChoiceAnswer(choice);
-          }
-
-          multipleChoiceContainer.appendChild(btn);
-        });
-
-        if (answerState === null) {
-          feedbackBox.classList.add('hidden');
-        } else {
-          renderFeedbackBox(q, answerState);
-        }
-      }
-
-      document.getElementById('prevBtn').disabled = currentIndex === 0;
-      
-      const nextBtn = document.getElementById('nextBtn');
-      nextBtn.disabled = answerState === null;
-      if (currentIndex === currentQuizPool.length - 1) {
-        nextBtn.innerHTML = `結果を見る <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`;
-      } else {
-        nextBtn.innerHTML = `次へ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>`;
-      }
-    }
-
-    // Keydown Listener
-document.addEventListener('keydown', function (e) {
-  const quizScreen = document.getElementById('quizScreen');
-  if (!quizScreen.classList.contains('hidden')) {
-    
-    // Enter key handler
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (currentMode === 'typing') {
-        if (userAnswers[currentIndex] === null) {
-          submitTypingAnswer();
-        } else {
-          nextQuestion();
-        }
-      } else if (currentMode === 'multiple') {
-        if (userAnswers[currentIndex] !== null) {
-          nextQuestion();
-        }
-      }
-    }
-
-    // Space key handler (Only active in 選択肢 mode after an answer is selected)
-    if ((e.key === ' ' || e.code === 'Space') && currentMode === 'multiple' && userAnswers[currentIndex] !== null) {
-      e.preventDefault();
-      nextQuestion();
-    }
-  }
-});
-
-    function normalizeText(text) {
-      return text ? text.trim().toLowerCase() : '';
-    }
-
-    function submitTypingAnswer() {
-      if (userAnswers[currentIndex] !== null) return;
-
-      const q = currentQuizPool[currentIndex];
-      const inputEl = document.getElementById('vietnameseInput');
-      const userVal = inputEl.value;
-
-      const normUser = normalizeText(userVal);
-      const normCorrect = normalizeText(q.answer);
-      const normAlts = (q.altAnswers || []).map(a => normalizeText(a));
-
-      const isCorrect = normUser === normCorrect || normAlts.includes(normUser);
-
-      userAnswers[currentIndex] = {
-        question: q,
-        userInput: userVal,
-        selectedOption: null,
-        isCorrect: isCorrect,
-        mode: 'typing'
-      };
-
-      if (isCorrect) {
-        playSound('correct');
-      } else {
-        playSound('incorrect');
-      }
-
-      renderQuestion();
-    }
-
-    function submitMultipleChoiceAnswer(selectedChoice) {
-      if (userAnswers[currentIndex] !== null) return;
-
-      const q = currentQuizPool[currentIndex];
-      const isCorrect = selectedChoice === q.answer;
-
-      userAnswers[currentIndex] = {
-        question: q,
-        userInput: null,
-        selectedOption: selectedChoice,
-        isCorrect: isCorrect,
-        mode: 'multiple'
-      };
-
-      if (isCorrect) {
-        playSound('correct');
-      } else {
-        playSound('incorrect');
-      }
-
-      renderQuestion();
-    }
-
-        function renderFeedbackBox(q, answerState) {
-      const feedbackBox = document.getElementById('feedbackBox');
-      feedbackBox.classList.remove('hidden');
-
-      if (answerState.isCorrect) {
-        feedbackBox.className = "p-4 sm:p-5 rounded-2xl text-sm leading-relaxed bg-emerald-50 border border-emerald-600 text-emerald-900 animate-fade-in flex items-start gap-3";
-        feedbackBox.innerHTML = `
-          <div class="p-1 rounded-lg bg-emerald-600 text-white shrink-0 mt-0.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-          </div>
-          <div>
-            <div class="font-black text-emerald-900 text-base mb-0.5">正解！</div>
-            <div class="text-xs sm:text-sm font-bold">正解のベトナム語: ${q.answer}</div>
-          </div>
-        `;
-      } else {
-        feedbackBox.className = "p-4 sm:p-5 rounded-2xl text-sm leading-relaxed bg-rose-50 border border-rose-700 text-rose-900 animate-fade-in flex items-start gap-3";
-        feedbackBox.innerHTML = `
-          <div class="p-1 rounded-lg bg-rose-700 text-white shrink-0 mt-0.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
-          </div>
-          <div>
-            <div class="font-black text-rose-900 text-base mb-0.5">不正解</div>
-            <div class="text-xs sm:text-sm font-bold">模範解答: ${q.answer}</div>
-            ${answerState.userInput ? `<div class="text-xs text-rose-700 mt-1">あなたの入力: "${answerState.userInput}"</div>` : ''}
-            ${answerState.selectedOption ? `<div class="text-xs text-rose-700 mt-1">選択した解答: "${answerState.selectedOption}"</div>` : ''}
-          </div>
-        `;
-      }
-    }
-
-    function prevQuestion() {
-      if (currentIndex > 0) {
-        playSound('click');
-        currentIndex--;
-        renderQuestion();
-      }
-    }
-
-    function nextQuestion() {
-      playSound('click');
-      if (currentIndex < currentQuizPool.length - 1) {
-        currentIndex++;
-        renderQuestion();
-      } else {
-        showResults();
-      }
-    }
-
-    // --- RESULTS & FILTERING ---
-    function showResults() {
-      document.getElementById('quizScreen').classList.add('hidden');
-      document.getElementById('resultScreen').classList.remove('hidden');
-
-      const correctCount = userAnswers.filter(a => a && a.isCorrect).length;
-      const totalCount = currentQuizPool.length;
-      const mistakeCount = totalCount - correctCount;
-      const accuracy = Math.round((correctCount / totalCount) * 100);
-
-      document.getElementById('scoreText').textContent = correctCount;
-      document.getElementById('totalScoreText').textContent = totalCount;
-      document.getElementById('accuracyText').textContent = `正解率 ${accuracy}%`;
-      document.getElementById('mistakeBadgeCount').textContent = mistakeCount;
-
-      // --- SAVE PROGRESS ---
-      const missedIds = [];
-      currentQuizPool.forEach((q, i) => {
-        const a = userAnswers[i];
-        if (!a || !a.isCorrect) missedIds.push(q.id);
-      });
-
-      if (currentMistakesOnly) {
-        // Only the previously-missed subset was tested: keep untouched mistakes,
-        // drop ones now answered correctly, keep ones still missed.
-        const prevIds = (progressData[currentCategoryKey] && progressData[currentCategoryKey].mistakeIds) || [];
-        const testedIds = currentQuizPool.map(q => q.id);
-        const untouched = prevIds.filter(id => !testedIds.includes(id));
-        progressData[currentCategoryKey] = {
-          completed: true,
-          mistakeIds: [...untouched, ...missedIds]
-        };
-      } else {
-        progressData[currentCategoryKey] = {
-          completed: true,
-          mistakeIds: missedIds
-        };
-      }
-      saveProgress();
-
-      currentFilter = 'all';
-      renderReviews();
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function filterReviews(filterType) {
-      playSound('click');
-      currentFilter = filterType;
-      
-      const allBtn = document.getElementById('filterBtnAll');
-      const mistakesBtn = document.getElementById('filterBtnMistakes');
-      const correctBtn = document.getElementById('filterBtnCorrect');
-
-      const activeClass = "bg-white text-zinc-900 shadow-sm font-extrabold";
-      const inactiveClass = "text-zinc-300 hover:text-white font-bold";
-
-      allBtn.className = `px-3 py-1.5 rounded-lg transition-all ${filterType === 'all' ? activeClass : inactiveClass}`;
-      mistakesBtn.className = `px-3 py-1.5 rounded-lg transition-all ${filterType === 'mistakes' ? activeClass : inactiveClass}`;
-      correctBtn.className = `px-3 py-1.5 rounded-lg transition-all ${filterType === 'correct' ? activeClass : inactiveClass}`;
-
-      renderReviews();
-    }
-
-    function renderReviews() {
-      const reviewContainer = document.getElementById('reviewContainer');
-      reviewContainer.innerHTML = '';
-
-      let itemsToDisplay = [];
-
-      currentQuizPool.forEach((q, i) => {
-        const uAns = userAnswers[i];
-        const isRight = uAns && uAns.isCorrect;
-
-        if (currentFilter === 'all') {
-          itemsToDisplay.push({ q, i, uAns, isRight });
-        } else if (currentFilter === 'mistakes' && !isRight) {
-          itemsToDisplay.push({ q, i, uAns, isRight });
-        } else if (currentFilter === 'correct' && isRight) {
-          itemsToDisplay.push({ q, i, uAns, isRight });
-        }
-      });
-
-      if (itemsToDisplay.length === 0) {
-        if (currentFilter === 'mistakes') {
-          reviewContainer.innerHTML = `
-            <div class="p-8 rounded-2xl bg-zinc-100 border border-zinc-300 text-center space-y-2">
-              <div class="w-12 h-12 rounded-full bg-zinc-200 text-zinc-800 inline-flex items-center justify-center font-black text-xl mb-1">
-                ✓
-              </div>
-              <h4 class="text-base font-extrabold text-zinc-900">間違えた問題はありません！</h4>
-              <p class="text-xs text-zinc-600 font-bold">素晴らしい！全問正解を達成しました。</p>
-            </div>
-          `;
-        } else {
-          reviewContainer.innerHTML = `
-            <div class="p-8 rounded-2xl bg-zinc-100 border border-zinc-300 text-center text-zinc-500 font-bold text-sm">
-              該当する問題はありません。
-            </div>
-          `;
-        }
-        return;
-      }
-
-      itemsToDisplay.forEach(({ q, i, uAns, isRight }) => {
-        const card = document.createElement('div');
-        card.className = `p-5 rounded-2xl border ${isRight ? 'border-zinc-300 bg-white' : 'border-zinc-400 bg-zinc-100'} shadow-sm text-sm space-y-3 animate-fade-in`;
-
-        let userValDisplay = '未入力';
-        if (uAns) {
-          if (uAns.mode === 'typing') {
-            userValDisplay = uAns.userInput || '未入力';
-          } else {
-            userValDisplay = uAns.selectedOption || '未選択';
-          }
-        }
-
-        card.innerHTML = `
-          <div class="flex items-center justify-between text-xs font-extrabold">
-            <span class="text-zinc-400">Q${i + 1} &bull; ${q.categoryLabel}</span>
-            <span class="${isRight ? 'text-zinc-900 bg-zinc-200 border border-zinc-300' : 'text-zinc-800 bg-zinc-300 border border-zinc-400'} px-2.5 py-0.5 rounded-full font-black">
-              ${isRight ? '正解' : '不正解'}
-            </span>
-          </div>
-
-          <div class="font-extrabold text-zinc-900 leading-relaxed text-base">
-            ベトナム語で 「${q.jp}」
-          </div>
-
-          <div class="pt-2 border-t border-zinc-200 text-xs sm:text-sm space-y-1.5 font-bold">
-            ${!isRight ? `<div class="text-zinc-700">あなたの回答: <span class="font-extrabold underline">${userValDisplay}</span></div>` : ''}
-            <div class="text-zinc-900">模範解答: ${q.answer}</div>
-          </div>
-        `;
-
-        reviewContainer.appendChild(card);
-      });
-    }
-
-    // --- INITIALIZATION ---
-    document.addEventListener('DOMContentLoaded', function () {
-      renderMyWordsList();
-      updateMyBookCard();
-      updateAllCategoryButtons();
-    });
+  { id: "v1", category: "verbs", categoryLabel: "動詞", jp: "行く", answer: "đi", altAnswers: [] },
+  { id: "v2", category: "verbs", categoryLabel: "動詞", jp: "来る / 到着する", answer: "đến", altAnswers: [] },
+  { id: "v3", category: "verbs", categoryLabel: "動詞", jp: "帰る / 戻る", answer: "về", altAnswers: [] },
+  { id: "v4", category: "verbs", categoryLabel: "動詞", jp: "食べる", answer: "ăn", altAnswers: [] },
+  { id: "v5", category: "verbs", categoryLabel: "動詞", jp: "飲む", answer: "uống", altAnswers: [] },
+  { id: "v6", category: "verbs", categoryLabel: "動詞", jp: "話す / 言う", answer: "nói", altAnswers: [] },
+  { id: "v7", category: "verbs", categoryLabel: "動詞", jp: "聞く", answer: "nghe", altAnswers: [] },
+  { id: "v8", category: "verbs", categoryLabel: "動詞", jp: "見る / 観る", answer: "xem", altAnswers: [] },
+  { id: "v9", category: "verbs", categoryLabel: "動詞", jp: "知っている", answer: "biết", altAnswers: [] },
+  { id: "v10", category: "verbs", categoryLabel: "動詞", jp: "理解する / 分かる", answer: "hiểu", altAnswers: [] },
+  { id: "v11", category: "verbs", categoryLabel: "動詞", jp: "買う", answer: "mua", altAnswers: [] },
+  { id: "v12", category: "verbs", categoryLabel: "動詞", jp: "欲しい / 〜したい", answer: "muốn", altAnswers: [] },
+  { id: "v13", category: "verbs", categoryLabel: "動詞", jp: "する / 作る / 働く", answer: "làm", altAnswers: [] },
+  { id: "v14", category: "verbs", categoryLabel: "動詞", jp: "売る", answer: "bán", altAnswers: [] },
+  { id: "v15", category: "verbs", categoryLabel: "動詞", jp: "読む", answer: "đọc", altAnswers: [] },
+  { id: "v16", category: "verbs", categoryLabel: "動詞", jp: "書く", answer: "viết", altAnswers: [] },
+  { id: "v17", category: "verbs", categoryLabel: "動詞", jp: "勉強する / 学ぶ", answer: "học", altAnswers: [] },
+  { id: "v18", category: "verbs", categoryLabel: "動詞", jp: "教える", answer: "dạy", altAnswers: [] },
+  { id: "v19", category: "verbs", categoryLabel: "動詞", jp: "寝る", answer: "ngủ", altAnswers: [] },
+  { id: "v20", category: "verbs", categoryLabel: "動詞", jp: "起きる", answer: "dậy", altAnswers: [] },
+  { id: "v21", category: "verbs", categoryLabel: "動詞", jp: "シャワーを浴びる", answer: "tắm", altAnswers: [] },
+  { id: "v22", category: "verbs", categoryLabel: "動詞", jp: "思う / 考える", answer: "nghĩ", altAnswers: [] },
+  { id: "v23", category: "verbs", categoryLabel: "動詞", jp: "覚えている / 恋しく思う", answer: "nhớ", altAnswers: [] },
+  { id: "v24", category: "verbs", categoryLabel: "動詞", jp: "忘れる", answer: "quên", altAnswers: [] },
+  { id: "v25", category: "verbs", categoryLabel: "動詞", jp: "好む / 好きである", answer: "thích", altAnswers: [] },
+  { id: "v26", category: "verbs", categoryLabel: "動詞", jp: "愛する", answer: "yêu", altAnswers: [] },
+  { id: "v27", category: "verbs", categoryLabel: "動詞", jp: "会う", answer: "gặp", altAnswers: [] },
+  { id: "v28", category: "verbs", categoryLabel: "動詞", jp: "待つ", answer: "đợi", altAnswers: [] },
+  { id: "v29", category: "verbs", categoryLabel: "動詞", jp: "探す", answer: "tìm", altAnswers: [] },
+  { id: "v30", category: "verbs", categoryLabel: "動詞", jp: "見える / 感じる", answer: "thấy", altAnswers: [] },
+  { id: "v31", category: "verbs", categoryLabel: "動詞", jp: "与える / あげる", answer: "cho", altAnswers: [] },
+  { id: "v32", category: "verbs", categoryLabel: "動詞", jp: "受け取る / もらう", answer: "nhận", altAnswers: [] },
+  { id: "v33", category: "verbs", categoryLabel: "動詞", jp: "必要とする", answer: "cần", altAnswers: [] },
+  { id: "v34", category: "verbs", categoryLabel: "動詞", jp: "ある / 持っている", answer: "có", altAnswers: [] },
+  { id: "v35", category: "verbs", categoryLabel: "動詞", jp: "住む / 生きる", answer: "sống", altAnswers: [] },
+  { id: "v36", category: "verbs", categoryLabel: "動詞", jp: "居る / 滞在する", answer: "ở", altAnswers: [] },
+  { id: "v37", category: "verbs", categoryLabel: "動詞", jp: "使う", answer: "dùng", altAnswers: [] },
+  { id: "v38", category: "verbs", categoryLabel: "動詞", jp: "手伝う / 助ける", answer: "giúp", altAnswers: [] },
+  { id: "v39", category: "verbs", categoryLabel: "動詞", jp: "尋ねる / 質問する", answer: "hỏi", altAnswers: [] },
+  { id: "v40", category: "verbs", categoryLabel: "動詞", jp: "答える", answer: "trả lời", altAnswers: [] },
+  { id: "v41", category: "verbs", categoryLabel: "動詞", jp: "始まる / 始める", answer: "bắt đầu", altAnswers: [] },
+  { id: "v42", category: "verbs", categoryLabel: "動詞", jp: "終わる / 終了する", answer: "kết thúc", altAnswers: [] },
+  { id: "v43", category: "verbs", categoryLabel: "動詞", jp: "走る", answer: "chạy", altAnswers: [] },
+  { id: "v44", category: "verbs", categoryLabel: "動詞", jp: "歩く", answer: "đi bộ", altAnswers: [] },
+  { id: "v45", category: "verbs", categoryLabel: "動詞", jp: "座る", answer: "ngồi", altAnswers: [] },
+  { id: "v46", category: "verbs", categoryLabel: "動詞", jp: "立つ", answer: "đứng", altAnswers: [] },
+  { id: "v47", category: "verbs", categoryLabel: "動詞", jp: "開ける", answer: "mở", altAnswers: [] },
+  { id: "v48", category: "verbs", categoryLabel: "動詞", jp: "閉める", answer: "đóng", altAnswers: [] },
+  { id: "v49", category: "verbs", categoryLabel: "動詞", jp: "払う / 返す", answer: "trả", altAnswers: [] },
+  { id: "v50", category: "verbs", categoryLabel: "動詞", jp: "持っていく / 運ぶ", answer: "mang", altAnswers: [] },
+
+  { id: "n1", category: "nouns", categoryLabel: "名詞", jp: "水", answer: "nước", altAnswers: [] },
+  { id: "n2", category: "nouns", categoryLabel: "名詞", jp: "ご飯 / ごちそう", answer: "cơm", altAnswers: [] },
+  { id: "n3", category: "nouns", categoryLabel: "名詞", jp: "家 / 住宅", answer: "nhà", altAnswers: [] },
+  { id: "n4", category: "nouns", categoryLabel: "名詞", jp: "お金", answer: "tiền", altAnswers: [] },
+  { id: "n5", category: "nouns", categoryLabel: "名詞", jp: "車 / 乗り物", answer: "xe", altAnswers: [] },
+  { id: "n6", category: "nouns", categoryLabel: "名詞", jp: "時間", answer: "thời gian", altAnswers: [] },
+  { id: "n7", category: "nouns", categoryLabel: "名詞", jp: "今日", answer: "hôm nay", altAnswers: [] },
+  { id: "n8", category: "nouns", categoryLabel: "名詞", jp: "明日", answer: "ngày mai", altAnswers: [] },
+  { id: "n9", category: "nouns", categoryLabel: "名詞", jp: "昨日", answer: "hôm qua", altAnswers: [] },
+  { id: "n10", category: "nouns", categoryLabel: "名詞", jp: "友達", answer: "bạn", altAnswers: [] },
+  { id: "n11", category: "nouns", categoryLabel: "名詞", jp: "人", answer: "người", altAnswers: [] },
+  { id: "n12", category: "nouns", categoryLabel: "名詞", jp: "日 / 日付", answer: "ngày", altAnswers: [] },
+  { id: "n13", category: "nouns", categoryLabel: "名詞", jp: "月", answer: "tháng", altAnswers: [] },
+  { id: "n14", category: "nouns", categoryLabel: "名詞", jp: "年", answer: "năm", altAnswers: [] },
+  { id: "n15", category: "nouns", categoryLabel: "名詞", jp: "場所 / 所", answer: "chỗ", altAnswers: [] },
+  { id: "n16", category: "nouns", categoryLabel: "名詞", jp: "学校", answer: "trường", altAnswers: [] },
+  { id: "n17", category: "nouns", categoryLabel: "名詞", jp: "会社", answer: "công ty", altAnswers: [] },
+  { id: "n18", category: "nouns", categoryLabel: "名詞", jp: "病院", answer: "bệnh viện", altAnswers: [] },
+  { id: "n19", category: "nouns", categoryLabel: "名詞", jp: "市場", answer: "chợ", altAnswers: [] },
+  { id: "n20", category: "nouns", categoryLabel: "名詞", jp: "レストラン", answer: "nhà hàng", altAnswers: [] },
+  { id: "n21", category: "nouns", categoryLabel: "名詞", jp: "部屋", answer: "phòng", altAnswers: [] },
+  { id: "n22", category: "nouns", categoryLabel: "名詞", jp: "本", answer: "sách", altAnswers: [] },
+  { id: "n23", category: "nouns", categoryLabel: "名詞", jp: "電話 / スマホ", answer: "điện thoại", altAnswers: [] },
+  { id: "n24", category: "nouns", categoryLabel: "名詞", jp: "バイク", answer: "xe máy", altAnswers: [] },
+  { id: "n25", category: "nouns", categoryLabel: "名詞", jp: "飛行機", answer: "máy bay", altAnswers: [] },
+  { id: "n26", category: "nouns", categoryLabel: "名詞", jp: "服 / シャツ", answer: "áo", altAnswers: [] },
+  { id: "n27", category: "nouns", categoryLabel: "名詞", jp: "靴", answer: "giày", altAnswers: [] },
+  { id: "n28", category: "nouns", categoryLabel: "名詞", jp: "バッグ / 鞄", answer: "túi xách", altAnswers: [] },
+  { id: "n29", category: "nouns", categoryLabel: "名詞", jp: "家族", answer: "gia đình", altAnswers: [] },
+  { id: "n30", category: "nouns", categoryLabel: "名詞", jp: "父 / お父さん", answer: "bố", altAnswers: [] },
+  { id: "n31", category: "nouns", categoryLabel: "名詞", jp: "母 / お母さん", answer: "mẹ", altAnswers: [] },
+  { id: "n32", category: "nouns", categoryLabel: "名詞", jp: "子供", answer: "con", altAnswers: [] },
+  { id: "n33", category: "nouns", categoryLabel: "名詞", jp: "先生 / 講師", answer: "thầy cô", altAnswers: [] },
+  { id: "n34", category: "nouns", categoryLabel: "名詞", jp: "学生 / 生徒", answer: "học sinh", altAnswers: [] },
+  { id: "n35", category: "nouns", categoryLabel: "名詞", jp: "仕事 / 作業", answer: "công việc", altAnswers: [] },
+  { id: "n36", category: "nouns", categoryLabel: "名詞", jp: "料理 / 食べ物", answer: "món ăn", altAnswers: [] },
+  { id: "n37", category: "nouns", categoryLabel: "名詞", jp: "お茶", answer: "trà", altAnswers: [] },
+  { id: "n38", category: "nouns", categoryLabel: "名詞", jp: "コーヒー", answer: "cà phê", altAnswers: [] },
+  { id: "n39", category: "nouns", categoryLabel: "名詞", jp: "肉", answer: "thịt", altAnswers: [] },
+  { id: "n40", category: "nouns", categoryLabel: "名詞", jp: "魚", answer: "cá", altAnswers: [] },
+  { id: "n41", category: "nouns", categoryLabel: "名詞", jp: "野菜", answer: "rau", altAnswers: [] },
+  { id: "n42", category: "nouns", categoryLabel: "名詞", jp: "果物", answer: "trái cây", altAnswers: [] },
+  { id: "n43", category: "nouns", categoryLabel: "名詞", jp: "天気", answer: "thời tiết", altAnswers: [] },
+  { id: "n44", category: "nouns", categoryLabel: "名詞", jp: "雨", answer: "mưa", altAnswers: [] },
+  { id: "n45", category: "nouns", categoryLabel: "名詞", jp: "晴れ / 日差し", answer: "nắng", altAnswers: [] },
+  { id: "n46", category: "nouns", categoryLabel: "名詞", jp: "道 / 道路", answer: "đường", altAnswers: [] },
+  { id: "n47", category: "nouns", categoryLabel: "名詞", jp: "名前", answer: "tên", altAnswers: [] },
+  { id: "n48", category: "nouns", categoryLabel: "名詞", jp: "言葉 / 言語", answer: "tiếng", altAnswers: [] },
+  { id: "n49", category: "nouns", categoryLabel: "名詞", jp: "写真", answer: "hình ảnh", altAnswers: [] },
+  { id: "n50", category: "nouns", categoryLabel: "名詞", jp: "問題", answer: "vấn đề", altAnswers: [] },
+
+  { id: "a1", category: "adjectives", categoryLabel: "形容詞", jp: "美味しい", answer: "ngon", altAnswers: [] },
+  { id: "a2", category: "adjectives", categoryLabel: "形容詞", jp: "良い / 上級の", answer: "tốt", altAnswers: [] },
+  { id: "a3", category: "adjectives", categoryLabel: "形容詞", jp: "美しい / 綺麗な", answer: "đẹp", altAnswers: [] },
+  { id: "a4", category: "adjectives", categoryLabel: "形容詞", jp: "多い / たくさん", answer: "nhiều", altAnswers: [] },
+  { id: "a5", category: "adjectives", categoryLabel: "形容詞", jp: "少ない", answer: "ít", altAnswers: [] },
+  { id: "a6", category: "adjectives", categoryLabel: "形容詞", jp: "高い (価格)", answer: "đắt", altAnswers: [] },
+  { id: "a7", category: "adjectives", categoryLabel: "形容詞", jp: "安い", answer: "rẻ", altAnswers: [] },
+  { id: "a8", category: "adjectives", categoryLabel: "形容詞", jp: "忙しい", answer: "bận", altAnswers: [] },
+  { id: "a9", category: "adjectives", categoryLabel: "形容詞", jp: "疲れた", answer: "mệt", altAnswers: [] },
+  { id: "a10", category: "adjectives", categoryLabel: "形容詞", jp: "暑い", answer: "nóng", altAnswers: [] },
+  { id: "a11", category: "adjectives", categoryLabel: "形容詞", jp: "寒い / 冷たい", answer: "lạnh", altAnswers: [] },
+  { id: "a12", category: "adjectives", categoryLabel: "形容詞", jp: "涼しい", answer: "mát", altAnswers: [] },
+  { id: "a13", category: "adjectives", categoryLabel: "形容詞", jp: "暖かい", answer: "ấm", altAnswers: [] },
+  { id: "a14", category: "adjectives", categoryLabel: "形容詞", jp: "大きい", answer: "lớn", altAnswers: [] },
+  { id: "a15", category: "adjectives", categoryLabel: "形容詞", jp: "小さい", answer: "nhỏ", altAnswers: [] },
+  { id: "a16", category: "adjectives", categoryLabel: "形容詞", jp: "長い", answer: "dài", altAnswers: [] },
+  { id: "a17", category: "adjectives", categoryLabel: "形容詞", jp: "短い", answer: "ngắn", altAnswers: [] },
+  { id: "a18", category: "adjectives", categoryLabel: "形容詞", jp: "高い (背・高さ)", answer: "cao", altAnswers: [] },
+  { id: "a19", category: "adjectives", categoryLabel: "形容詞", jp: "低い (背・高さ)", answer: "thấp", altAnswers: [] },
+  { id: "a20", category: "adjectives", categoryLabel: "形容詞", jp: "重い", answer: "nặng", altAnswers: [] },
+  { id: "a21", category: "adjectives", categoryLabel: "形容詞", jp: "軽い", answer: "nhẹ", altAnswers: [] },
+  { id: "a22", category: "adjectives", categoryLabel: "形容詞", jp: "新しい", answer: "mới", altAnswers: [] },
+  { id: "a23", category: "adjectives", categoryLabel: "形容詞", jp: "古い", answer: "cũ", altAnswers: [] },
+  { id: "a24", category: "adjectives", categoryLabel: "形容詞", jp: "速い / 早い", answer: "nhanh", altAnswers: [] },
+  { id: "a25", category: "adjectives", categoryLabel: "形容詞", jp: "遅い", answer: "chậm", altAnswers: [] },
+  { id: "a26", category: "adjectives", categoryLabel: "形容詞", jp: "難しい", answer: "khó", altAnswers: [] },
+  { id: "a27", category: "adjectives", categoryLabel: "形容詞", jp: "簡単な / 易しい", answer: "dễ", altAnswers: [] },
+  { id: "a28", category: "adjectives", categoryLabel: "形容詞", jp: "楽しい / 嬉しい", answer: "vui", altAnswers: [] },
+  { id: "a29", category: "adjectives", categoryLabel: "形容詞", jp: "悲しい", answer: "buồn", altAnswers: [] },
+  { id: "a30", category: "adjectives", categoryLabel: "形容詞", jp: "面白い", answer: "thú vị", altAnswers: [] },
+  { id: "a31", category: "adjectives", categoryLabel: "形容詞", jp: "つまらない", answer: "chán", altAnswers: [] },
+  { id: "a32", category: "adjectives", categoryLabel: "形容詞", jp: "遠い", answer: "xa", altAnswers: [] },
+  { id: "a33", category: "adjectives", categoryLabel: "形容詞", jp: "近い", answer: "gần", altAnswers: [] },
+  { id: "a34", category: "adjectives", categoryLabel: "形容詞", jp: "綺麗な / 清潔な", answer: "sạch", altAnswers: [] },
+  { id: "a35", category: "adjectives", categoryLabel: "形容詞", jp: "汚い", answer: "bẩn", altAnswers: [] },
+  { id: "a36", category: "adjectives", categoryLabel: "形容詞", jp: "明るい", answer: "sáng", altAnswers: [] },
+  { id: "a37", category: "adjectives", categoryLabel: "形容詞", jp: "暗い", answer: "tối", altAnswers: [] },
+  { id: "a38", category: "adjectives", categoryLabel: "形容詞", jp: "強い", answer: "mạnh", altAnswers: [] },
+  { id: "a39", category: "adjectives", categoryLabel: "形容詞", jp: "弱い", answer: "yếu", altAnswers: [] },
+  { id: "a40", category: "adjectives", categoryLabel: "形容詞", jp: "甘い", answer: "ngọt", altAnswers: [] },
+  { id: "a41", category: "adjectives", categoryLabel: "形容詞", jp: "辛い", answer: "cay", altAnswers: [] },
+  { id: "a42", category: "adjectives", categoryLabel: "形容詞", jp: "しょっぱい", answer: "mặn", altAnswers: [] },
+  { id: "a43", category: "adjectives", categoryLabel: "形容詞", jp: "酸っぱい", answer: "chua", altAnswers: [] },
+  { id: "a44", category: "adjectives", categoryLabel: "形容詞", jp: "苦い", answer: "đắng", altAnswers: [] },
+  { id: "a45", category: "adjectives", categoryLabel: "形容詞", jp: "お腹が空いた", answer: "đói", altAnswers: [] },
+  { id: "a46", category: "adjectives", categoryLabel: "形容詞", jp: "お腹がいっぱい", answer: "no", altAnswers: [] },
+  { id: "a47", category: "adjectives", categoryLabel: "形容詞", jp: "喉が渇いた", answer: "khát", altAnswers: [] },
+  { id: "a48", category: "adjectives", categoryLabel: "形容詞", jp: "静かな", answer: "yên tĩnh", altAnswers: [] },
+  { id: "a49", category: "adjectives", categoryLabel: "形容詞", jp: "うるさい / 賑やかな", answer: "ồn ào", altAnswers: [] },
+  { id: "a50", category: "adjectives", categoryLabel: "形容詞", jp: "優しい", answer: "hiền", altAnswers: [] }
+];
