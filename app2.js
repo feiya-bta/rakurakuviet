@@ -80,6 +80,7 @@
       verbs: "基本動詞", 
       nouns: "基本名詞", 
       adjectives: "形容詞・状態",
+      bodyparts: "体の部位",
       mybook: "マイ単語帳"
     };
 
@@ -119,6 +120,148 @@
     let myWords = loadMyWords();
     let currentCategoryKey = 'all';
     let currentMistakesOnly = false;
+
+    // --- PERSISTENCE: IN-PROGRESS QUIZ (RESUME) ---
+    const INPROGRESS_STORAGE_KEY = 'vnVocab_inProgress_v1';
+
+    function loadInProgressMap() {
+      try {
+        return JSON.parse(localStorage.getItem(INPROGRESS_STORAGE_KEY)) || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveInProgressMap(map) {
+      try {
+        localStorage.setItem(INPROGRESS_STORAGE_KEY, JSON.stringify(map));
+      } catch (e) { /* storage unavailable, fail silently */ }
+    }
+
+    function inProgressKey(categoryKey, mistakesOnly) {
+      return `${categoryKey}::${mistakesOnly ? 'mistakes' : 'full'}`;
+    }
+
+    function getInProgressSnapshot(categoryKey, mistakesOnly) {
+      const map = loadInProgressMap();
+      return map[inProgressKey(categoryKey, mistakesOnly)] || null;
+    }
+
+    function clearInProgressSnapshot(categoryKey, mistakesOnly) {
+      const map = loadInProgressMap();
+      const key = inProgressKey(categoryKey, mistakesOnly);
+      if (map[key]) {
+        delete map[key];
+        saveInProgressMap(map);
+      }
+    }
+
+    function saveCurrentProgressSnapshot() {
+      if (!currentQuizPool || !currentQuizPool.length) return;
+      // Don't save a snapshot for a quiz that's already fully answered (nothing to resume)
+      if (userAnswers.every(a => a !== null)) return;
+
+      const map = loadInProgressMap();
+      map[inProgressKey(currentCategoryKey, currentMistakesOnly)] = {
+        categoryKey: currentCategoryKey,
+        mistakesOnly: currentMistakesOnly,
+        mode: currentMode,
+        poolIds: currentQuizPool.map(q => q.id),
+        currentIndex,
+        answers: userAnswers.map(a => a ? {
+          userInput: a.userInput,
+          selectedOption: a.selectedOption,
+          isCorrect: a.isCorrect,
+          mode: a.mode
+        } : null),
+        generatedChoices: currentQuizPool.map(q => q._generatedChoices || null)
+      };
+      saveInProgressMap(map);
+    }
+
+    function findWordById(id) {
+      return rawQuestions.find(q => q.id === id) || myWords.find(w => w.id === id);
+    }
+
+    function resumeQuiz(snapshot) {
+      const pool = snapshot.poolIds.map(id => findWordById(id)).filter(Boolean);
+      if (!pool.length) {
+        clearInProgressSnapshot(snapshot.categoryKey, snapshot.mistakesOnly);
+        showHomeView();
+        return;
+      }
+
+      pool.forEach((q, i) => {
+        const choices = snapshot.generatedChoices && snapshot.generatedChoices[i];
+        if (choices) {
+          q._generatedChoices = choices;
+        } else {
+          delete q._generatedChoices;
+        }
+      });
+
+      currentQuizPool = pool;
+      currentCategoryKey = snapshot.categoryKey;
+      currentMistakesOnly = !!snapshot.mistakesOnly;
+      currentMode = snapshot.mode;
+      currentIndex = Math.min(snapshot.currentIndex || 0, pool.length - 1);
+      userAnswers = pool.map((q, i) => {
+        const a = snapshot.answers && snapshot.answers[i];
+        return a ? { question: q, userInput: a.userInput, selectedOption: a.selectedOption, isCorrect: a.isCorrect, mode: a.mode } : null;
+      });
+
+      const catText = categoryNamesMap[currentCategoryKey] || "単語";
+      const modeText = currentMode === 'typing' ? 'タイピング' : '4択選択';
+      const mistakesTag = currentMistakesOnly ? ' ・間違えた単語のみ' : '';
+      document.getElementById('categorySubtitle').textContent = `${catText}${mistakesTag} [${modeText}] (${currentQuizPool.length}問)`;
+
+      document.getElementById('homeScreen').classList.add('hidden');
+      document.getElementById('resultScreen').classList.add('hidden');
+      document.getElementById('quizScreen').classList.remove('hidden');
+
+      renderQuestion();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- RESUME CHOICE MODAL ---
+    let pendingResumeSnapshot = null;
+    let pendingResumeStartFreshAction = null;
+
+    function openResumeChoiceModal(snapshot, startFreshAction) {
+      playSound('click');
+      pendingResumeSnapshot = snapshot;
+      pendingResumeStartFreshAction = startFreshAction;
+      const catName = categoryNamesMap[snapshot.categoryKey] || "カテゴリー";
+      document.getElementById('resumeCategoryName').textContent = catName;
+      document.getElementById('resumeModalOverlay').classList.remove('hidden');
+    }
+
+    function closeResumeChoiceModal() {
+      playSound('click');
+      document.getElementById('resumeModalOverlay').classList.add('hidden');
+      pendingResumeSnapshot = null;
+      pendingResumeStartFreshAction = null;
+    }
+
+    function chooseResumeContinue() {
+      playSound('click');
+      const snap = pendingResumeSnapshot;
+      document.getElementById('resumeModalOverlay').classList.add('hidden');
+      pendingResumeSnapshot = null;
+      pendingResumeStartFreshAction = null;
+      if (snap) resumeQuiz(snap);
+    }
+
+    function chooseResumeFresh() {
+      playSound('click');
+      const snap = pendingResumeSnapshot;
+      const startFreshAction = pendingResumeStartFreshAction;
+      document.getElementById('resumeModalOverlay').classList.add('hidden');
+      pendingResumeSnapshot = null;
+      pendingResumeStartFreshAction = null;
+      if (snap) clearInProgressSnapshot(snap.categoryKey, snap.mistakesOnly);
+      if (startFreshAction) startFreshAction();
+    }
 
     function escapeHtml(str) {
       const div = document.createElement('div');
@@ -204,6 +347,15 @@
 
     function startMyBookQuiz() {
       if (!myWords.length) return;
+      const snapshot = getInProgressSnapshot('mybook', false);
+      if (snapshot) {
+        openResumeChoiceModal(snapshot, () => {
+          playSound('click');
+          currentMode = 'typing';
+          startQuiz('mybook', false);
+        });
+        return;
+      }
       playSound('click');
       currentMode = 'typing';
       startQuiz('mybook', false);
@@ -236,6 +388,15 @@
       if (!prog || !prog.mistakeIds || !prog.mistakeIds.length) return;
 
       if (categoryKey === 'mybook') {
+        const snapshot = getInProgressSnapshot('mybook', true);
+        if (snapshot) {
+          openResumeChoiceModal(snapshot, () => {
+            playSound('click');
+            currentMode = 'typing';
+            startQuiz('mybook', true);
+          });
+          return;
+        }
         playSound('click');
         currentMode = 'typing';
         startQuiz('mybook', true);
@@ -257,6 +418,16 @@
     let pendingMistakesOnly = false;
 
     function openModeModal(categoryFilter, mistakesOnly) {
+      mistakesOnly = !!mistakesOnly;
+      const snapshot = getInProgressSnapshot(categoryFilter, mistakesOnly);
+      if (snapshot) {
+        openResumeChoiceModal(snapshot, () => openModeModalDirect(categoryFilter, mistakesOnly));
+        return;
+      }
+      openModeModalDirect(categoryFilter, mistakesOnly);
+    }
+
+    function openModeModalDirect(categoryFilter, mistakesOnly) {
       playSound('click');
       pendingCategory = categoryFilter;
       pendingMistakesOnly = !!mistakesOnly;
@@ -281,6 +452,10 @@
 
     // --- NAVIGATION & VIEWS ---
     function showHomeView() {
+      const quizScreenEl = document.getElementById('quizScreen');
+      if (quizScreenEl && !quizScreenEl.classList.contains('hidden')) {
+        saveCurrentProgressSnapshot();
+      }
       playSound('click');
       document.getElementById('homeScreen').classList.remove('hidden');
       document.getElementById('quizScreen').classList.add('hidden');
@@ -293,6 +468,7 @@
     }
 
     function startQuiz(categoryFilter, mistakesOnly) {
+      clearInProgressSnapshot(categoryFilter, !!mistakesOnly);
       const shuffleQuestions = document.getElementById('shuffleQuestionsToggle').checked;
 
       // Reset dynamic multiple choice properties so they get regenerated freshly
@@ -402,7 +578,7 @@
 
         // Generate 4 options (1 correct answer + 3 distinct distractors)
         if (!q._generatedChoices) {
-          const distinctAnswersPool = Array.from(new Set(rawQuestions.filter(item => item.answer !== q.answer).map(item => item.answer)));
+          const distinctAnswersPool = Array.from(new Set(rawQuestions.filter(item => item.category === q.category && item.answer !== q.answer).map(item => item.answer)));
           const shuffledOthers = shuffleArray(distinctAnswersPool);
           const distractors = shuffledOthers.slice(0, 3);
           q._generatedChoices = shuffleArray([q.answer, ...distractors]);
@@ -613,23 +789,42 @@ document.addEventListener('keydown', function (e) {
         if (!a || !a.isCorrect) missedIds.push(q.id);
       });
 
+      if (!progressData[currentCategoryKey]) {
+        progressData[currentCategoryKey] = { completed: false, mistakeIds: [], byMode: {} };
+      }
+      const prog = progressData[currentCategoryKey];
+      if (!prog.byMode) prog.byMode = {};
+
+      // Update this mode's own mistake list (typing / multiple are tracked independently)
       if (currentMistakesOnly) {
-        // Only the previously-missed subset was tested: keep untouched mistakes,
-        // drop ones now answered correctly, keep ones still missed.
-        const prevIds = (progressData[currentCategoryKey] && progressData[currentCategoryKey].mistakeIds) || [];
+        // Only the previously-missed subset (for this mode) was tested: keep untouched
+        // mistakes, drop ones now answered correctly, keep ones still missed.
+        const prevIds = (prog.byMode[currentMode] && prog.byMode[currentMode].mistakeIds) || [];
         const testedIds = currentQuizPool.map(q => q.id);
         const untouched = prevIds.filter(id => !testedIds.includes(id));
-        progressData[currentCategoryKey] = {
-          completed: true,
-          mistakeIds: [...untouched, ...missedIds]
-        };
+        prog.byMode[currentMode] = { mistakeIds: [...untouched, ...missedIds] };
       } else {
-        progressData[currentCategoryKey] = {
-          completed: true,
-          mistakeIds: missedIds
-        };
+        prog.byMode[currentMode] = { mistakeIds: missedIds };
       }
+
+      // Whichever mode (typing / multiple choice) currently has MORE mistakes wins,
+      // and that list is what "間違えた単語のみ練習" uses for both modes going forward.
+      const typingList = prog.byMode.typing ? prog.byMode.typing.mistakeIds : null;
+      const multipleList = prog.byMode.multiple ? prog.byMode.multiple.mistakeIds : null;
+
+      let chosenIds;
+      if (typingList && multipleList) {
+        chosenIds = typingList.length >= multipleList.length ? typingList : multipleList;
+      } else {
+        chosenIds = typingList || multipleList || [];
+      }
+
+      prog.completed = true;
+      prog.mistakeIds = chosenIds;
       saveProgress();
+
+      // This attempt is finished, so any saved "resume" snapshot for it is stale.
+      clearInProgressSnapshot(currentCategoryKey, currentMistakesOnly);
 
       currentFilter = 'all';
       renderReviews();
@@ -729,6 +924,13 @@ document.addEventListener('keydown', function (e) {
         reviewContainer.appendChild(card);
       });
     }
+
+    window.addEventListener('beforeunload', function () {
+      const quizScreenEl = document.getElementById('quizScreen');
+      if (quizScreenEl && !quizScreenEl.classList.contains('hidden')) {
+        saveCurrentProgressSnapshot();
+      }
+    });
 
     // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', function () {
