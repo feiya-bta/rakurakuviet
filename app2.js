@@ -64,7 +64,7 @@
     }
 
     // --- APP STATE ---
-    let pendingCategory = 'all';
+    let pendingCategory = 'animals';
     let currentQuizPool = [];
     let currentIndex = 0;
     let currentMode = 'typing'; // 'typing' or 'multiple'
@@ -72,14 +72,15 @@
     let currentFilter = 'all'; 
 
     const categoryNamesMap = { 
-      all: "すべての単語", 
       animals: "動物",
+      animals2: "動物II",
       jobs: "職業",
       buildings: "建物・場所",
       pronouns: "代名詞・人称", 
       verbs: "基本動詞", 
       nouns: "基本名詞", 
       adjectives: "形容詞・状態",
+      connectors: "接続詞・副詞・疑問詞",
       bodyparts: "体の部位",
       mybook: "マイ単語帳"
     };
@@ -118,7 +119,7 @@
 
     let progressData = loadProgress();
     let myWords = loadMyWords();
-    let currentCategoryKey = 'all';
+    let currentCategoryKey = 'animals';
     let currentMistakesOnly = false;
 
     // --- PERSISTENCE: IN-PROGRESS QUIZ (RESUME) ---
@@ -379,8 +380,32 @@
       }
     }
 
+    function updateStamp(categoryKey) {
+      const btn = document.querySelector(`button[onclick="openModeModal('${categoryKey}')"]`);
+      if (!btn) return;
+      btn.classList.add('relative');
+
+      const existing = btn.querySelector('.complete-stamp');
+      const prog = progressData[categoryKey];
+
+      if (prog && prog.perfect) {
+        if (!existing) {
+          const img = document.createElement('img');
+          img.src = 'images/complete_stamp.png';
+          img.alt = 'コンプリート';
+          img.className = 'complete-stamp';
+          btn.appendChild(img);
+        }
+      } else if (existing) {
+        existing.remove();
+      }
+    }
+
     function updateAllCategoryButtons() {
-      Object.keys(categoryNamesMap).forEach(key => updateMistakesButton(key));
+      Object.keys(categoryNamesMap).forEach(key => {
+        updateMistakesButton(key);
+        updateStamp(key);
+      });
     }
 
     function startMistakesPractice(categoryKey) {
@@ -477,8 +502,6 @@
       let filtered = [];
       if (categoryFilter === 'mybook') {
         filtered = [...myWords];
-      } else if (categoryFilter === 'all') {
-        filtered = [...rawQuestions];
       } else {
         filtered = rawQuestions.filter(q => q.category === categoryFilter);
       }
@@ -817,6 +840,11 @@ document.addEventListener('keydown', function (e) {
         chosenIds = typingList.length >= multipleList.length ? typingList : multipleList;
       } else {
         chosenIds = typingList || multipleList || [];
+      }
+
+      // Stamp is earned only by a FULL run (not mistakes-only) with zero mistakes
+      if (!currentMistakesOnly && missedIds.length === 0) {
+        prog.perfect = true;
       }
 
       prog.completed = true;

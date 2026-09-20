@@ -58,3 +58,21 @@ body {
   background-color: #3a3b40;
   color: #ffffff !important; /* Forces text to remain white */
 }
+
+/* Complete stamp on category cards */
+.complete-stamp {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 84px;
+  height: auto;
+  z-index: 10;
+  pointer-events: none;
+  transform: translateY(-50%) rotate(-12deg);
+  animation: stampIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes stampIn {
+  from { opacity: 0; transform: translateY(-50%) rotate(-12deg) scale(1.8); }
+  to   { opacity: 0.95; transform: translateY(-50%) rotate(-12deg) scale(1); }
+}
