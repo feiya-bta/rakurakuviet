@@ -843,7 +843,7 @@ document.addEventListener('keydown', function (e) {
       }
 
       // Stamp is earned only by a FULL run (not mistakes-only) with zero mistakes
-      if (!currentMistakesOnly && missedIds.length === 0) {
+      if (!currentMistakesOnly && currentMode === 'typing' && missedIds.length === 0) {
         prog.perfect = true;
       }
 
