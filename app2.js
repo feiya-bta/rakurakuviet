@@ -271,15 +271,10 @@
     }
 
     // --- MY WORD BOOK UI ---
-    function renderMyWordsList() {
-      const container = document.getElementById('myWordsList');
-      if (!myWords.length) {
-        container.innerHTML = '<p class="text-xs text-zinc-400 font-bold text-center py-3">まだ単語が登録されていません。</p>';
-        return;
-      }
-      container.innerHTML = myWords.map(w => `
-        <div class="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200">
-          <div class="text-xs sm:text-sm min-w-0 truncate">
+    function myWordRowHtml(w, roomy) {
+      return `
+        <div class="flex items-center justify-between gap-2 px-3.5 ${roomy ? 'py-3' : 'py-2.5'} rounded-xl bg-zinc-50 border border-zinc-200 hover:border-zinc-300 hover:bg-white transition-colors animate-fade-in">
+          <div class="${roomy ? 'text-sm' : 'text-xs sm:text-sm'} min-w-0 truncate">
             <span class="font-extrabold text-zinc-700">${escapeHtml(w.jp)}</span>
             <span class="text-zinc-400 mx-1.5">→</span>
             <span class="font-bold text-zinc-600">${escapeHtml(w.answer)}</span>
@@ -288,7 +283,124 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
-      `).join('');
+      `;
+    }
+
+    function renderMyWordsList() {
+      // Compact preview list on the home screen
+      const container = document.getElementById('myWordsList');
+      if (container) {
+        if (!myWords.length) {
+          container.innerHTML = '<p class="text-xs text-zinc-400 font-bold text-center py-3">まだ単語が登録されていません。</p>';
+        } else {
+          container.innerHTML = myWords.map(w => myWordRowHtml(w, false)).join('');
+        }
+      }
+
+      // Full, searchable list inside the "view all" modal
+      const modalList = document.getElementById('myWordsModalList');
+      if (modalList) {
+        const searchInput = document.getElementById('myWordsModalSearch');
+        const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const filtered = q
+          ? myWords.filter(w => w.jp.toLowerCase().includes(q) || w.answer.toLowerCase().includes(q))
+          : myWords;
+
+        const countEl = document.getElementById('myWordsModalCount');
+        if (countEl) countEl.textContent = filtered.length;
+
+        if (!filtered.length) {
+          modalList.innerHTML = `<p class="text-sm text-zinc-400 font-bold text-center py-12">${myWords.length ? '該当する単語が見つかりません。' : 'まだ単語が登録されていません。'}</p>`;
+        } else {
+          modalList.innerHTML = filtered.map(w => myWordRowHtml(w, true)).join('');
+        }
+      }
+    }
+
+    function openMyWordsModal() {
+      playSound('click');
+      const overlay = document.getElementById('myWordsModalOverlay');
+      if (!overlay) return;
+      const searchInput = document.getElementById('myWordsModalSearch');
+      if (searchInput) searchInput.value = '';
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      renderMyWordsList();
+      if (searchInput) searchInput.focus();
+    }
+
+    function closeMyWordsModal() {
+      playSound('click');
+      const overlay = document.getElementById('myWordsModalOverlay');
+      if (!overlay) return;
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+    }
+
+    // --- CATEGORY WORD LIST MODAL (preview all words before practicing) ---
+    let currentWordListCategory = null;
+
+    function wordListRowHtml(q) {
+      return `
+        <div class="flex items-center justify-between gap-2 px-3.5 py-3 rounded-xl bg-zinc-50 border border-zinc-200 hover:border-zinc-300 hover:bg-white transition-colors animate-fade-in">
+          <div class="text-sm min-w-0 truncate">
+            <span class="font-extrabold text-zinc-700">${escapeHtml(q.jp)}</span>
+            <span class="text-zinc-400 mx-1.5">→</span>
+            <span class="font-bold text-zinc-600">${escapeHtml(q.answer)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function openWordListModal(categoryFilter) {
+      playSound('click');
+      currentWordListCategory = categoryFilter;
+      const overlay = document.getElementById('wordListModalOverlay');
+      if (!overlay) return;
+      const catName = categoryNamesMap[categoryFilter] || 'カテゴリー';
+      document.getElementById('wordListModalTitle').textContent = catName + ' 一覧';
+      const searchInput = document.getElementById('wordListModalSearch');
+      if (searchInput) searchInput.value = '';
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      renderWordListModal();
+      if (searchInput) searchInput.focus();
+    }
+
+    function closeWordListModal() {
+      playSound('click');
+      const overlay = document.getElementById('wordListModalOverlay');
+      if (!overlay) return;
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+    }
+
+    function renderWordListModal() {
+      const listEl = document.getElementById('wordListModalList');
+      if (!listEl || !currentWordListCategory) return;
+
+      const words = rawQuestions.filter(q => q.category === currentWordListCategory);
+      const searchInput = document.getElementById('wordListModalSearch');
+      const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      const filtered = query
+        ? words.filter(q => q.jp.toLowerCase().includes(query) || q.answer.toLowerCase().includes(query))
+        : words;
+
+      const countEl = document.getElementById('wordListModalCount');
+      if (countEl) countEl.textContent = filtered.length;
+
+      if (!filtered.length) {
+        listEl.innerHTML = `<p class="text-sm text-zinc-400 font-bold text-center py-12">該当する単語が見つかりません。</p>`;
+      } else {
+        listEl.innerHTML = filtered.map(wordListRowHtml).join('');
+      }
+    }
+
+    function startPracticeFromWordList() {
+      if (!currentWordListCategory) return;
+      const cat = currentWordListCategory;
+      closeWordListModal();
+      openModeModal(cat);
     }
 
     function updateMyBookCard() {
@@ -388,13 +500,25 @@
       const existing = btn.querySelector('.complete-stamp');
       const prog = progressData[categoryKey];
 
-      if (prog && prog.perfect) {
+      // "perfect" = fully completed in ONE go with zero mistakes -> red complete stamp.
+      // "mastered" = every word has eventually been answered correctly (list fully
+      // cleared through resumed / mistakes-only practice, i.e. NOT in one go) ->
+      // the semi-completed stamp, until a true one-go run upgrades it to complete.
+      const isPerfect = !!(prog && prog.perfect);
+      const isMastered = !!(prog && prog.completed && prog.mistakeIds && prog.mistakeIds.length === 0);
+
+      if (isPerfect || isMastered) {
+        const stampSrc = isPerfect ? 'images/complete_stamp.png' : 'images/stamp_semicompleted.png';
+        const stampAlt = isPerfect ? 'コンプリート' : '一部達成';
         if (!existing) {
           const img = document.createElement('img');
-          img.src = 'images/complete_stamp.png';
-          img.alt = 'コンプリート';
+          img.src = stampSrc;
+          img.alt = stampAlt;
           img.className = 'complete-stamp';
           btn.appendChild(img);
+        } else if (existing.getAttribute('src') !== stampSrc) {
+          existing.src = stampSrc;
+          existing.alt = stampAlt;
         }
       } else if (existing) {
         existing.remove();

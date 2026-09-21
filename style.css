@@ -1,4 +1,8 @@
-body {
+html {
+      scroll-behavior: smooth;
+    }
+
+    body {
       font-family: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: #f4f4f5; /* zinc-100 */
       color: #43434a; /* zinc-900 */
