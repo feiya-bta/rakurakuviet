@@ -828,7 +828,6 @@
       if (!btn) return;
       btn.classList.add('relative');
 
-      const existing = btn.querySelector('.complete-stamp:not(.complete-stamp-multiple)');
       const prog = progressData[categoryKey];
 
       // "perfect" = fully completed in ONE go with zero mistakes (typing) -> red complete stamp.
@@ -836,45 +835,44 @@
       // cleared through resumed / mistakes-only practice, i.e. NOT in one go) ->
       // the semi-completed stamp, until a true one-go run upgrades it to complete.
       const isPerfect = !!(prog && prog.perfect);
-      // The semi-completed stamp is specifically about TYPING mode having been
-      // fully cleared (not necessarily in one go). It must NOT be triggered just
-      // because multiple-choice mode was completed perfectly — that has its own
-      // separate stamp (perfectMultiple, handled below).
       const typingMistakes = (prog && prog.byMode && prog.byMode.typing) ? prog.byMode.typing.mistakeIds : null;
       const isMastered = !isPerfect && !!(typingMistakes && typingMistakes.length === 0);
+      const hasTypingStamp = isPerfect || isMastered;
 
-      if (isPerfect || isMastered) {
+      // Typing / mastered stamp (red or blue), always right-aligned.
+      let typingImg = btn.querySelector('img.js-typing-stamp');
+      if (hasTypingStamp) {
         const stampSrc = isPerfect ? 'images/complete_stamp.png' : 'images/stamp_semicompleted.png';
         const stampAlt = isPerfect ? 'コンプリート' : '一部達成';
-        if (!existing) {
-          const img = document.createElement('img');
-          img.src = stampSrc;
-          img.alt = stampAlt;
-          img.className = 'complete-stamp';
-          btn.appendChild(img);
-        } else if (existing.getAttribute('src') !== stampSrc) {
-          existing.src = stampSrc;
-          existing.alt = stampAlt;
+        if (!typingImg) {
+          typingImg = document.createElement('img');
+          typingImg.className = 'complete-stamp js-typing-stamp';
+          btn.appendChild(typingImg);
         }
-      } else if (existing) {
-        existing.remove();
+        if (typingImg.getAttribute('src') !== stampSrc) {
+          typingImg.src = stampSrc;
+          typingImg.alt = stampAlt;
+        }
+      } else if (typingImg) {
+        typingImg.remove();
       }
 
-      // "perfectMultiple" = fully completed in ONE go with zero mistakes in 4-choice mode.
-      // Placed to the LEFT of the typing/mastered stamp above.
-      const existingMulti = btn.querySelector('.complete-stamp-multiple');
+      // Multiple-choice ("4択コンプリート", green) stamp. If the typing stamp is
+      // ALSO showing, shift this one to the left so they don't overlap. If it's
+      // the only stamp earned, let it sit flush right in the typing stamp's spot.
+      let multiImg = btn.querySelector('img.js-multi-stamp');
       const isPerfectMultiple = !!(prog && prog.perfectMultiple);
-
       if (isPerfectMultiple) {
-        if (!existingMulti) {
-          const img = document.createElement('img');
-          img.src = 'images/multiple_complete.png';
-          img.alt = '4択コンプリート';
-          img.className = 'complete-stamp complete-stamp-multiple';
-          btn.appendChild(img);
+        if (!multiImg) {
+          multiImg = document.createElement('img');
+          multiImg.src = 'images/multiple_complete.png';
+          multiImg.alt = '4択コンプリート';
+          multiImg.className = 'complete-stamp js-multi-stamp';
+          btn.appendChild(multiImg);
         }
-      } else if (existingMulti) {
-        existingMulti.remove();
+        multiImg.classList.toggle('complete-stamp-multiple', hasTypingStamp);
+      } else if (multiImg) {
+        multiImg.remove();
       }
     }
 
