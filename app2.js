@@ -836,7 +836,12 @@
       // cleared through resumed / mistakes-only practice, i.e. NOT in one go) ->
       // the semi-completed stamp, until a true one-go run upgrades it to complete.
       const isPerfect = !!(prog && prog.perfect);
-      const isMastered = !!(prog && prog.completed && prog.mistakeIds && prog.mistakeIds.length === 0);
+      // The semi-completed stamp is specifically about TYPING mode having been
+      // fully cleared (not necessarily in one go). It must NOT be triggered just
+      // because multiple-choice mode was completed perfectly — that has its own
+      // separate stamp (perfectMultiple, handled below).
+      const typingMistakes = (prog && prog.byMode && prog.byMode.typing) ? prog.byMode.typing.mistakeIds : null;
+      const isMastered = !isPerfect && !!(typingMistakes && typingMistakes.length === 0);
 
       if (isPerfect || isMastered) {
         const stampSrc = isPerfect ? 'images/complete_stamp.png' : 'images/stamp_semicompleted.png';
@@ -1087,7 +1092,7 @@
               : 'border-zinc-200 bg-zinc-50 text-zinc-400 opacity-60 cursor-not-allowed'
           }`;
 
-          const labels = ['A', 'B', 'C', 'D'];
+          const labels = keybinds.map(k => keyDisplayLabel(k));
           btn.innerHTML = `
             <div class="flex items-center gap-3">
               <span class="w-7 h-7 rounded-lg bg-zinc-200 text-zinc-800 flex items-center justify-center font-black text-xs shrink-0">${labels[idx]}</span>
@@ -1130,6 +1135,8 @@
 
     // Keydown Listener
 document.addEventListener('keydown', function (e) {
+  if (capturingKeybindSlot !== null) return; // settings modal is capturing a new key right now
+
   const quizScreen = document.getElementById('quizScreen');
   if (!quizScreen.classList.contains('hidden')) {
     
@@ -1153,6 +1160,19 @@ document.addEventListener('keydown', function (e) {
     if ((e.key === ' ' || e.code === 'Space') && currentMode === 'multiple' && userAnswers[currentIndex] !== null) {
       e.preventDefault();
       nextQuestion();
+    }
+
+    // Custom key handler for selecting a multiple-choice answer directly
+    if (currentMode === 'multiple' && userAnswers[currentIndex] === null) {
+      const pressed = normalizeKeyName(e.key);
+      const idx = keybinds.findIndex(k => normalizeKeyName(k) === pressed);
+      if (idx !== -1) {
+        const q = currentQuizPool[currentIndex];
+        if (q && q._generatedChoices && q._generatedChoices[idx] !== undefined) {
+          e.preventDefault();
+          submitMultipleChoiceAnswer(q._generatedChoices[idx]);
+        }
+      }
     }
   }
 });
@@ -1451,6 +1471,241 @@ document.addEventListener('keydown', function (e) {
       if (!overlay) return;
       overlay.classList.add('hidden');
       overlay.classList.remove('flex');
+    }
+
+    // --- CUSTOM KEY BINDINGS FOR MULTIPLE-CHOICE MODE ---
+    const KEYBINDS_STORAGE_KEY = 'vnVocab_keybinds_v1';
+    const DEFAULT_KEYBINDS = ['a', 'b', 'c', 'd'];
+    // Keys reserved for other controls (Enter = submit/next, Space = next in multiple mode)
+    const RESERVED_KEYS = ['Enter', ' '];
+
+    function loadKeybinds() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(KEYBINDS_STORAGE_KEY));
+        if (Array.isArray(saved) && saved.length === 4 && saved.every(k => typeof k === 'string' && k.length > 0)) {
+          return saved;
+        }
+      } catch (e) { /* ignore, fall back to default */ }
+      return [...DEFAULT_KEYBINDS];
+    }
+
+    function saveKeybinds(arr) {
+      try {
+        localStorage.setItem(KEYBINDS_STORAGE_KEY, JSON.stringify(arr));
+      } catch (e) { /* storage unavailable, fail silently */ }
+    }
+
+    let keybinds = loadKeybinds();
+
+    function normalizeKeyName(key) {
+      if (!key) return '';
+      return key.length === 1 ? key.toLowerCase() : key;
+    }
+
+    function keyDisplayLabel(key) {
+      const specialLabels = {
+        ' ': 'Space', 'Enter': 'Enter', 'Escape': 'Esc', 'Tab': 'Tab',
+        'ArrowUp': '↑', 'ArrowDown': '↓', 'ArrowLeft': '←', 'ArrowRight': '→'
+      };
+      if (specialLabels[key]) return specialLabels[key];
+      return key.length === 1 ? key.toUpperCase() : key;
+    }
+
+    // --- SETTINGS MODAL (data backup tab + key bindings tab) ---
+    let capturingKeybindSlot = null;
+
+    function openSettingsModal() {
+      playSound('click');
+      const overlay = document.getElementById('settingsModalOverlay');
+      if (!overlay) return;
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      switchSettingsTab('data');
+    }
+
+    function closeSettingsModal() {
+      playSound('click');
+      cancelKeybindCapture();
+      const overlay = document.getElementById('settingsModalOverlay');
+      if (!overlay) return;
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+    }
+
+    function switchSettingsTab(tab) {
+      playSound('click');
+      const dataTab = document.getElementById('settingsTabData');
+      const keysTab = document.getElementById('settingsTabKeys');
+      const dataBtn = document.getElementById('settingsTabDataBtn');
+      const keysBtn = document.getElementById('settingsTabKeysBtn');
+      if (!dataTab || !keysTab || !dataBtn || !keysBtn) return;
+
+      const activeClass = 'px-3.5 py-1.5 rounded-lg transition-all bg-white text-zinc-900 shadow-sm';
+      const inactiveClass = 'px-3.5 py-1.5 rounded-lg transition-all text-zinc-500 hover:text-zinc-800';
+
+      if (tab === 'keys') {
+        dataTab.classList.add('hidden');
+        keysTab.classList.remove('hidden');
+        dataBtn.className = inactiveClass;
+        keysBtn.className = activeClass;
+        renderKeybindGrid();
+      } else {
+        dataTab.classList.remove('hidden');
+        keysTab.classList.add('hidden');
+        dataBtn.className = activeClass;
+        keysBtn.className = inactiveClass;
+      }
+    }
+
+    function renderKeybindGrid() {
+      const grid = document.getElementById('keybindGrid');
+      if (!grid) return;
+      grid.innerHTML = keybinds.map((k, i) => `
+        <button type="button" onclick="startKeybindCapture(${i})" data-slot="${i}" class="keybind-slot-btn p-4 rounded-2xl border-2 border-zinc-300 bg-zinc-50 hover:border-zinc-700 hover:bg-white transition-all flex flex-col items-center justify-center gap-1 text-center">
+          <span class="text-xs font-bold text-zinc-400">選択肢 ${i + 1}</span>
+          <span class="keybind-slot-value text-xl font-black text-zinc-700 min-h-[1.75rem] leading-tight">${escapeHtml(keyDisplayLabel(k))}</span>
+          <span class="text-[10px] font-bold text-zinc-400">タップして変更</span>
+        </button>
+      `).join('');
+    }
+
+    function startKeybindCapture(slot) {
+      if (capturingKeybindSlot !== null) return; // already capturing another slot
+      playSound('click');
+      capturingKeybindSlot = slot;
+      const errorEl = document.getElementById('keybindError');
+      if (errorEl) errorEl.classList.add('hidden');
+
+      const btn = document.querySelector(`.keybind-slot-btn[data-slot="${slot}"]`);
+      if (btn) {
+        btn.classList.add('border-zinc-700', 'bg-white');
+        const valueEl = btn.querySelector('.keybind-slot-value');
+        if (valueEl) valueEl.textContent = '入力待ち…';
+      }
+      document.addEventListener('keydown', captureKeybindListener, true);
+    }
+
+    function captureKeybindListener(e) {
+      if (capturingKeybindSlot === null) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.key === 'Escape') {
+        cancelKeybindCapture();
+        return;
+      }
+
+      const newKey = e.key;
+      const errorEl = document.getElementById('keybindError');
+
+      if (RESERVED_KEYS.includes(newKey)) {
+        if (errorEl) {
+          errorEl.textContent = 'このキーは「次へ進む」操作にすでに使われているため設定できません。';
+          errorEl.classList.remove('hidden');
+        }
+        cancelKeybindCapture();
+        return;
+      }
+
+      const normalizedNew = normalizeKeyName(newKey);
+      const dupIndex = keybinds.findIndex((k, idx) => idx !== capturingKeybindSlot && normalizeKeyName(k) === normalizedNew);
+      if (dupIndex !== -1) {
+        if (errorEl) {
+          errorEl.textContent = `そのキーはすでに選択肢 ${dupIndex + 1} に割り当てられています。別のキーを押してください。`;
+          errorEl.classList.remove('hidden');
+        }
+        cancelKeybindCapture();
+        return;
+      }
+
+      if (errorEl) errorEl.classList.add('hidden');
+      keybinds[capturingKeybindSlot] = newKey;
+      saveKeybinds(keybinds);
+      finishKeybindCapture();
+    }
+
+    function finishKeybindCapture() {
+      document.removeEventListener('keydown', captureKeybindListener, true);
+      capturingKeybindSlot = null;
+      renderKeybindGrid();
+    }
+
+    function cancelKeybindCapture() {
+      if (capturingKeybindSlot === null) return;
+      document.removeEventListener('keydown', captureKeybindListener, true);
+      capturingKeybindSlot = null;
+      renderKeybindGrid();
+    }
+
+    function resetKeybinds() {
+      playSound('click');
+      cancelKeybindCapture();
+      keybinds = [...DEFAULT_KEYBINDS];
+      saveKeybinds(keybinds);
+      renderKeybindGrid();
+      const errorEl = document.getElementById('keybindError');
+      if (errorEl) errorEl.classList.add('hidden');
+    }
+
+    // --- BACKUP: EXPORT / IMPORT ALL SAVED DATA ---
+    function exportProgressData() {
+      playSound('click');
+      try {
+        const backup = {
+          type: 'vnVocab-backup',
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          progressData: loadProgress(),
+          myWords: loadMyWords(),
+          customFolders: loadFolders(),
+          inProgress: loadInProgressMap()
+        };
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `vn-vocab-backup-${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        alert('バックアップの保存に失敗しました。');
+      }
+    }
+
+    function importProgressData(event) {
+      const input = event.target;
+      const file = input.files && input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data || typeof data !== 'object') throw new Error('invalid backup file');
+
+          const ok = confirm('現在のデータを上書きしてバックアップから復元しますか？この操作は取り消せません。');
+          if (!ok) {
+            input.value = '';
+            return;
+          }
+
+          if (data.progressData) localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(data.progressData));
+          if (data.myWords) localStorage.setItem(MYWORDS_STORAGE_KEY, JSON.stringify(data.myWords));
+          if (data.customFolders) localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(data.customFolders));
+          if (data.inProgress) localStorage.setItem(INPROGRESS_STORAGE_KEY, JSON.stringify(data.inProgress));
+
+          alert('復元が完了しました。ページを再読み込みします。');
+          location.reload();
+        } catch (err) {
+          alert('ファイルの読み込みに失敗しました。正しいバックアップファイルか確認してください。');
+        } finally {
+          input.value = '';
+        }
+      };
+      reader.readAsText(file);
     }
 
     // --- INITIALIZATION ---

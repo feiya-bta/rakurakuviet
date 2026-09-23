@@ -38,6 +38,12 @@
       <button onclick="openTutorialModal()" class="p-2.5 rounded-xl text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center border border-zinc-300/80" title="使い方ガイド">
         <svg class="w-5 h-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       </button>
+      <div class="relative">
+        <button onclick="openSettingsModal()" class="p-2.5 rounded-xl text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center border border-zinc-300/80" title="設定">
+          <svg class="w-5 h-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.712 7.712 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </button>
+      </div>
+      <input type="file" id="importFileInput" accept="application/json" class="hidden" onchange="importProgressData(event)">
       <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center border border-zinc-300/80" title="音効 ON/OFF">
         <svg id="soundIconOn" class="w-5 h-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
         <svg id="soundIconOff" class="w-5 h-5 hidden text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
@@ -647,6 +653,82 @@
     </div>
   </div>
 
+  <!-- SETTINGS MODAL (DATA BACKUP + KEY BINDINGS) -->
+  <div id="settingsModalOverlay" class="fixed inset-0 bg-zinc-700/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-lg border border-zinc-300 shadow-2xl animate-pop-in relative flex flex-col max-h-[85vh] overflow-hidden">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between gap-3 px-6 sm:px-8 pt-6 sm:pt-7 pb-4 border-b border-zinc-200 shrink-0">
+        <div class="min-w-0">
+          <span class="text-xs font-black text-zinc-400 uppercase tracking-widest">Settings</span>
+          <h3 class="text-xl sm:text-2xl font-black text-zinc-700">設定</h3>
+        </div>
+        <button onclick="closeSettingsModal()" class="p-2 text-zinc-400 hover:text-zinc-800 rounded-full hover:bg-zinc-100 transition-colors shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="px-6 sm:px-8 pt-4 shrink-0">
+        <div class="inline-flex p-1 bg-zinc-100 rounded-xl text-xs font-bold border border-zinc-200">
+          <button id="settingsTabDataBtn" onclick="switchSettingsTab('data')" class="px-3.5 py-1.5 rounded-lg transition-all">データ</button>
+          <button id="settingsTabKeysBtn" onclick="switchSettingsTab('keys')" class="px-3.5 py-1.5 rounded-lg transition-all">キー設定</button>
+        </div>
+      </div>
+
+      <!-- Scrollable body -->
+      <div class="flex-1 overflow-y-auto scroll-smooth px-6 sm:px-8 py-5 space-y-3">
+
+        <!-- DATA TAB -->
+        <div id="settingsTabData" class="space-y-3">
+          <p class="text-xs text-zinc-500 font-medium leading-relaxed">スタンプ・間違えた単語・マイ単語帳・マイフォルダをまとめてバックアップできます。</p>
+
+          <button onclick="exportProgressData()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-zinc-300 bg-zinc-50 hover:bg-white hover:border-zinc-700 transition-colors text-left">
+            <span class="w-10 h-10 rounded-xl bg-zinc-700 text-white flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            </span>
+            <span class="min-w-0">
+              <div class="font-extrabold text-zinc-800 text-sm">バックアップを保存</div>
+              <div class="text-xs text-zinc-500 font-medium">現在のデータをファイルとしてダウンロード</div>
+            </span>
+          </button>
+
+          <button onclick="document.getElementById('importFileInput').click()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-zinc-300 bg-zinc-50 hover:bg-white hover:border-zinc-700 transition-colors text-left">
+            <span class="w-10 h-10 rounded-xl bg-zinc-700 text-white flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 7.5L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+            </span>
+            <span class="min-w-0">
+              <div class="font-extrabold text-zinc-800 text-sm">バックアップから復元</div>
+              <div class="text-xs text-zinc-500 font-medium">保存したファイルを選んで復元（現在のデータは上書き）</div>
+            </span>
+          </button>
+        </div>
+
+        <!-- KEYS TAB -->
+        <div id="settingsTabKeys" class="hidden space-y-3">
+          <p class="text-xs text-zinc-500 font-medium leading-relaxed">4択選択モードで使うキーボードのキーを自由に設定できます。ボタンをタップして、割り当てたいキーを押してください。</p>
+
+          <div class="grid grid-cols-2 gap-3" id="keybindGrid">
+            <!-- injected via JS -->
+          </div>
+
+          <p id="keybindError" class="hidden text-xs font-bold text-zinc-600 bg-zinc-100 border border-zinc-300 rounded-xl px-3.5 py-2"></p>
+
+          <button onclick="resetKeybinds()" class="text-xs font-extrabold text-zinc-500 hover:text-zinc-800 underline underline-offset-2 decoration-zinc-300 hover:decoration-zinc-800 transition-colors">
+            デフォルト（A・B・C・D）に戻す
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 sm:px-8 py-3.5 border-t border-zinc-200 shrink-0 flex justify-end">
+        <button onclick="closeSettingsModal()" class="px-5 py-2.5 rounded-xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 active:bg-zinc-950 transition-all shadow-md shadow-zinc-400/20">
+          閉じる
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TUTORIAL / HOW TO USE MODAL -->
   <div id="tutorialModalOverlay" class="fixed inset-0 bg-zinc-700/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
     <div class="bg-white rounded-3xl w-full max-w-xl border border-zinc-300 shadow-2xl animate-pop-in relative flex flex-col max-h-[85vh] overflow-hidden">
@@ -664,6 +746,7 @@
         <div class="space-y-1.5">
           <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">1</span>コースで演習する</h4>
           <p class="text-zinc-500 font-medium leading-relaxed pl-7">「コースを選択してスタート」からカテゴリを選び、タイピング入力か4択選択のモードを選んで演習を開始します。カテゴリ名をタップすると、単語の一覧を先に確認できます。</p>
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">キーボード操作にも対応しています。タイピングモードでは<span class="font-mono font-bold text-zinc-700">Enter</span>で解答・次へ進み、4択選択モードでは選択肢に表示されているキーを押して選び、<span class="font-mono font-bold text-zinc-700">Enter</span>または<span class="font-mono font-bold text-zinc-700">Space</span>で次の問題へ進めます。使用するキーはヘッダーの<span class="font-extrabold text-zinc-700">⚙（設定）</span>から自由に変更できます。</p>
         </div>
         <div class="space-y-1.5">
           <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">2</span>マイ単語帳・マイフォルダ</h4>
@@ -712,6 +795,14 @@
         <div class="space-y-1.5">
           <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">6</span>続きから再開</h4>
           <p class="text-zinc-500 font-medium leading-relaxed pl-7">演習の途中でホームに戻っても進捗は自動保存され、次に同じカテゴリを開くと「続きから」再開するか「最初から」やり直すか選べます。</p>
+        </div>
+        <div class="space-y-1.5">
+          <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">7</span>データのバックアップ・復元</h4>
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">ヘッダーの<span class="font-extrabold text-zinc-700">⚙（設定）</span>アイコンから「データ」タブを開くと、「バックアップを保存」でスタンプ・間違えた単語・マイ単語帳・マイフォルダをすべて含むファイルがダウンロードされ、「バックアップから復元」でそのファイルを選ぶと以前の状態に戻せます（現在のデータは上書きされるのでご注意ください）。ブラウザのデータが消える前に、定期的な保存をおすすめします。</p>
+        </div>
+        <div class="space-y-1.5">
+          <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">8</span>4択選択のキーを自由に設定</h4>
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">「⚙（設定）」→「キー設定」タブから、4択選択モードの各選択肢に割り当てるキーボードのキーを好きなものに変更できます。変更したいマスをタップし、割り当てたいキーを1つ押すだけで設定完了です。選択肢のボタンにも設定したキーが表示されるので、迷うことはありません。</p>
         </div>
       </div>
 
