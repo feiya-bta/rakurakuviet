@@ -35,6 +35,9 @@
     </div>
 
     <div class="flex items-center space-x-2">
+      <button onclick="openTutorialModal()" class="p-2.5 rounded-xl text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center border border-zinc-300/80" title="使い方ガイド">
+        <svg class="w-5 h-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </button>
       <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl text-zinc-700 hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center border border-zinc-300/80" title="音効 ON/OFF">
         <svg id="soundIconOn" class="w-5 h-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
         <svg id="soundIconOff" class="w-5 h-5 hidden text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
@@ -224,6 +227,17 @@
         </div>
       </div>
 
+      <!-- MY FOLDERS (CUSTOM USER FOLDERS) -->
+      <div class="space-y-3">
+        <h3 class="text-xs font-extrabold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+          <svg class="w-4 h-4 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+          マイフォルダ
+        </h3>
+        <div id="foldersGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <!-- Folder cards injected via JS -->
+        </div>
+      </div>
+
       <!-- MY WORD BOOK (PERSONAL VOCABULARY) -->
       <div class="bg-white rounded-2xl p-5 border border-zinc-300 shadow-sm space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-2">
@@ -248,23 +262,6 @@
 </div>
         </div>
         <p id="myWordError" class="hidden text-xs font-bold text-zinc-600 bg-zinc-100 border border-zinc-300 rounded-xl px-3.5 py-2">日本語とベトナム語の両方を入力してください。</p>
-
-        <!-- Word list -->
-        <div id="myWordsList" class="space-y-2 max-h-56 overflow-y-auto pr-1">
-          <p class="text-xs text-zinc-400 font-bold text-center py-3">まだ単語が登録されていません。</p>
-        </div>
-
-        <!-- Practice buttons -->
-        <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
-          <button id="myBookPracticeBtn" onclick="startMyBookQuiz()" disabled class="flex-grow px-5 py-3 rounded-2xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 active:bg-zinc-950 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-md shadow-zinc-400/20">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-            マイ単語帳で演習する
-          </button>
-          <button id="mistakesBtn-mybook" onclick="startMistakesPractice('mybook')" class="hidden px-5 py-3 rounded-2xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            間違えた単語のみ復習 (<span id="mistakesCount-mybook">0</span>)
-          </button>
-        </div>
       </div>
     </section>
 
@@ -522,9 +519,14 @@
           <span class="text-xs font-black text-zinc-400 uppercase tracking-widest">Word List</span>
           <h3 class="text-xl sm:text-2xl font-black text-zinc-700 truncate" id="wordListModalTitle">カテゴリ名</h3>
         </div>
-        <button onclick="closeWordListModal()" class="p-2 text-zinc-400 hover:text-zinc-800 rounded-full hover:bg-zinc-100 transition-colors shrink-0">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
+        <div class="flex items-center gap-1 shrink-0">
+          <button id="wordListEditFolderBtn" onclick="openFolderEditModal(currentWordListFolderId)" class="hidden p-2 text-zinc-400 hover:text-zinc-800 rounded-full hover:bg-zinc-100 transition-colors" title="フォルダを編集">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </button>
+          <button onclick="closeWordListModal()" class="p-2 text-zinc-400 hover:text-zinc-800 rounded-full hover:bg-zinc-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
       </div>
 
       <!-- Search -->
@@ -540,6 +542,18 @@
             class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border-2 border-zinc-300 focus:border-zinc-700 focus:outline-none text-sm font-bold text-zinc-700 bg-zinc-50/50 transition-colors"
           />
         </div>
+      </div>
+
+      <!-- Bulk add (folder mode only) -->
+      <div id="wordListBulkAddSection" class="hidden px-6 sm:px-8 pt-3 pb-1 shrink-0 space-y-2 border-b border-zinc-100">
+        <p class="text-xs text-zinc-500 font-medium leading-relaxed">
+          「ベトナム語,日本語」のペアを <span class="font-extrabold text-zinc-700">;</span> または改行で区切って貼り付けてください。
+        </p>
+        <textarea id="wordListBulkInput" rows="2" placeholder="con chó,犬;con mèo,猫" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-zinc-300 focus:border-zinc-700 focus:outline-none text-sm font-bold text-zinc-700 bg-zinc-50/50 transition-colors resize-y"></textarea>
+        <p id="wordListBulkError" class="hidden text-xs font-bold text-zinc-600 bg-zinc-100 border border-zinc-300 rounded-xl px-3.5 py-2"></p>
+        <button onclick="addBulkWordsToCurrentFolder()" class="px-5 py-2.5 rounded-xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 active:bg-zinc-950 transition-all shadow-md shadow-zinc-400/20">
+          このフォルダに一括登録する
+        </button>
       </div>
 
       <!-- Scrollable list -->
@@ -594,6 +608,117 @@
       <!-- Footer -->
       <div class="px-6 sm:px-8 py-3.5 border-t border-zinc-200 text-xs font-bold text-zinc-400 text-center shrink-0">
         合計 <span id="myWordsModalCount">0</span> 語
+      </div>
+    </div>
+  </div>
+
+  <!-- FOLDER CREATE / EDIT MODAL -->
+  <div id="folderEditModalOverlay" class="fixed inset-0 bg-zinc-700/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-zinc-300 shadow-2xl space-y-5 animate-pop-in relative">
+      <button onclick="closeFolderEditModal()" class="absolute top-5 right-5 p-2 text-zinc-400 hover:text-zinc-800 rounded-full hover:bg-zinc-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <div class="space-y-1">
+        <span class="text-xs font-black text-zinc-400 uppercase tracking-widest">Folder</span>
+        <h3 id="folderEditModalTitle" class="text-xl font-black text-zinc-700">新しいフォルダを作成</h3>
+      </div>
+
+      <div class="space-y-3">
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold text-zinc-500">フォルダ名</label>
+          <input type="text" id="folderNameInput" placeholder="例：旅行でよく使う単語" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-zinc-300 focus:border-zinc-700 focus:outline-none text-sm font-bold text-zinc-700 bg-zinc-50/50 transition-colors">
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold text-zinc-500">説明・メモ（任意）</label>
+          <textarea id="folderDescInput" rows="2" placeholder="このフォルダの内容についてメモできます。" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-zinc-300 focus:border-zinc-700 focus:outline-none text-sm font-bold text-zinc-700 bg-zinc-50/50 transition-colors resize-y"></textarea>
+        </div>
+        <p id="folderEditError" class="hidden text-xs font-bold text-zinc-600 bg-zinc-100 border border-zinc-300 rounded-xl px-3.5 py-2"></p>
+      </div>
+
+      <div class="flex items-center gap-2.5 pt-1">
+        <button id="folderDeleteBtn" onclick="deleteFolderConfirm()" class="hidden px-4 py-2.5 rounded-xl border border-zinc-300 text-zinc-500 font-extrabold text-sm hover:bg-zinc-700 hover:text-white hover:border-zinc-700 transition-colors">
+          削除
+        </button>
+        <button onclick="saveFolderModal()" class="flex-grow px-5 py-2.5 rounded-xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 active:bg-zinc-950 transition-all shadow-md shadow-zinc-400/20">
+          保存する
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TUTORIAL / HOW TO USE MODAL -->
+  <div id="tutorialModalOverlay" class="fixed inset-0 bg-zinc-700/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-xl border border-zinc-300 shadow-2xl animate-pop-in relative flex flex-col max-h-[85vh] overflow-hidden">
+      <div class="flex items-center justify-between gap-3 px-6 sm:px-8 pt-6 sm:pt-7 pb-4 border-b border-zinc-200 shrink-0">
+        <div class="min-w-0">
+          <span class="text-xs font-black text-zinc-400 uppercase tracking-widest">Guide</span>
+          <h3 class="text-xl sm:text-2xl font-black text-zinc-700">使い方ガイド</h3>
+        </div>
+        <button onclick="closeTutorialModal()" class="p-2 text-zinc-400 hover:text-zinc-800 rounded-full hover:bg-zinc-100 transition-colors shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto scroll-smooth px-6 sm:px-8 py-5 space-y-5 text-sm">
+        <div class="space-y-1.5">
+          <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">1</span>コースで演習する</h4>
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">「コースを選択してスタート」からカテゴリを選び、タイピング入力か4択選択のモードを選んで演習を開始します。カテゴリ名をタップすると、単語の一覧を先に確認できます。</p>
+        </div>
+        <div class="space-y-1.5">
+          <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">2</span>マイ単語帳・マイフォルダ</h4>
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">「マイ単語帳」では自分だけの単語を1つずつ、または一括貼り付けでまとめて登録できます。「マイフォルダ」ではオリジナルのフォルダを作成し、名前や説明を編集・削除でき、コースと同じようにタイピング・4択の両方で演習できます。</p>
+        </div>
+        <div class="space-y-1.5">
+          <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">3</span>一括登録フォーマット</h4>
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">「ベトナム語,日本語」の形式で単語を1組にし、<span class="font-mono font-bold text-zinc-700">;</span>（セミコロン）または改行で区切って貼り付けると、一度に複数の単語を登録できます。<br>例：<span class="font-mono text-zinc-600">con chó,犬;con mèo,猫</span></p>
+        </div>
+        <div class="space-y-1.5">
+          <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">4</span>間違えた単語のみ復習</h4>
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">演習を完了すると、間違えた単語だけをまとめて復習できるボタンがホーム画面と結果画面に表示されます。</p>
+        </div>
+        <div class="space-y-2.5">
+          <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">5</span>スタンプ</h4>
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">演習の結果に応じて、カテゴリカードに3種類のスタンプが表示されます。色の意味は以下の通りです。</p>
+
+          <div class="pl-7 space-y-2">
+            <div class="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-2.5">
+              <img src="images/complete_stamp.png" alt="コンプリートスタンプ" class="w-12 h-12 object-contain shrink-0">
+              <div class="min-w-0">
+                <p class="text-xs font-black text-rose-700">コンプリートスタンプ</p>
+                <p class="text-xs text-zinc-500 font-medium leading-snug">タイピングモードで、1回の演習を最初から最後まで<span class="font-extrabold text-zinc-700">一度も間違えずに</span>クリアすると表示されます。</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-2.5">
+              <img src="images/stamp_semicompleted.png" alt="一部達成スタンプ" class="w-12 h-12 object-contain shrink-0">
+              <div class="min-w-0">
+                <p class="text-xs font-black text-zinc-700">一部達成スタンプ</p>
+                <p class="text-xs text-zinc-500 font-medium leading-snug">「続きから」や「間違えた単語のみ復習」を使いながらでも、<span class="font-extrabold text-zinc-700">最終的にすべての単語に正解</span>すると表示されます（一発クリアではないもの）。</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-2.5">
+              <img src="images/multiple_complete.png" alt="4択コンプリートスタンプ" class="w-12 h-12 object-contain shrink-0">
+              <div class="min-w-0">
+                <p class="text-xs font-black text-zinc-700">4択コンプリートスタンプ</p>
+                <p class="text-xs text-zinc-500 font-medium leading-snug">4択選択モードで、1回の演習を<span class="font-extrabold text-zinc-700">一度も間違えずに</span>クリアすると表示されます。タイピングのスタンプの左側に並びます。</p>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">タイピングと4択、両方のスタンプを同時に獲得することもできます。</p>
+        </div>
+        <div class="space-y-1.5">
+          <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">6</span>続きから再開</h4>
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">演習の途中でホームに戻っても進捗は自動保存され、次に同じカテゴリを開くと「続きから」再開するか「最初から」やり直すか選べます。</p>
+        </div>
+      </div>
+
+      <div class="px-6 sm:px-8 py-3.5 border-t border-zinc-200 shrink-0 flex justify-end">
+        <button onclick="closeTutorialModal()" class="px-5 py-2.5 rounded-xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 active:bg-zinc-950 transition-all shadow-md shadow-zinc-400/20">
+          閉じる
+        </button>
       </div>
     </div>
   </div>

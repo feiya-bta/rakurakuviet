@@ -80,3 +80,8 @@ html {
   from { opacity: 0; transform: translateY(-50%) rotate(-12deg) scale(1.8); }
   to   { opacity: 0.95; transform: translateY(-50%) rotate(-12deg) scale(1); }
 }
+
+/* Multiple-choice completion stamp: sits to the LEFT of the typing/mastered stamp */
+.complete-stamp-multiple {
+  right: 96px;
+}

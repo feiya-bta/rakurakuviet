@@ -122,6 +122,77 @@
     let currentCategoryKey = 'animals';
     let currentMistakesOnly = false;
 
+    // --- PERSISTENCE: CUSTOM FOLDERS ---
+    const FOLDERS_STORAGE_KEY = 'vnVocab_customFolders_v1';
+
+    function loadFolders() {
+      try {
+        return JSON.parse(localStorage.getItem(FOLDERS_STORAGE_KEY)) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveFolders() {
+      try {
+        localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(customFolders));
+      } catch (e) { /* storage unavailable, fail silently */ }
+    }
+
+    let customFolders = loadFolders();
+
+    // --- SHARED HELPERS: labels & word pools across built-in categories, マイ単語帳, and folders ---
+    function getCategoryLabel(key) {
+      if (categoryNamesMap[key]) return categoryNamesMap[key];
+      if (key && key.indexOf('folder_') === 0) {
+        const f = customFolders.find(x => ('folder_' + x.id) === key);
+        if (f) return f.name;
+      }
+      return key || 'カテゴリー';
+    }
+
+    function getPoolForKey(key) {
+      if (key === 'mybook') return myWords;
+      if (key && key.indexOf('folder_') === 0) {
+        const fid = key.slice('folder_'.length);
+        const f = customFolders.find(x => x.id === fid);
+        return f ? f.words : [];
+      }
+      return rawQuestions.filter(q => q.category === key);
+    }
+
+    function getDistractorPool(q) {
+      let pool = getPoolForKey(q.category).filter(item => item.answer !== q.answer);
+      if (pool.length < 3) {
+        const extra = rawQuestions.filter(item => item.answer !== q.answer);
+        pool = pool.concat(extra);
+      }
+      return pool;
+    }
+
+    function clearAllGeneratedChoices() {
+      rawQuestions.forEach(q => delete q._generatedChoices);
+      myWords.forEach(q => delete q._generatedChoices);
+      customFolders.forEach(f => f.words.forEach(q => delete q._generatedChoices));
+    }
+
+    function parseBulkWords(text) {
+      if (!text) return [];
+      const cleaned = text.replace(/[【】]/g, '').replace(/\n+/g, ';');
+      return cleaned.split(';')
+        .map(e => e.trim())
+        .filter(Boolean)
+        .map(entry => {
+          const idx = entry.indexOf(',');
+          if (idx === -1) return null;
+          const vn = entry.slice(0, idx).trim();
+          const jp = entry.slice(idx + 1).trim();
+          if (!vn || !jp) return null;
+          return { vn, jp };
+        })
+        .filter(Boolean);
+    }
+
     // --- PERSISTENCE: IN-PROGRESS QUIZ (RESUME) ---
     const INPROGRESS_STORAGE_KEY = 'vnVocab_inProgress_v1';
 
@@ -181,7 +252,14 @@
     }
 
     function findWordById(id) {
-      return rawQuestions.find(q => q.id === id) || myWords.find(w => w.id === id);
+      let found = rawQuestions.find(q => q.id === id) || myWords.find(w => w.id === id);
+      if (!found) {
+        for (const f of customFolders) {
+          found = f.words.find(w => w.id === id);
+          if (found) break;
+        }
+      }
+      return found;
     }
 
     function resumeQuiz(snapshot) {
@@ -211,7 +289,7 @@
         return a ? { question: q, userInput: a.userInput, selectedOption: a.selectedOption, isCorrect: a.isCorrect, mode: a.mode } : null;
       });
 
-      const catText = categoryNamesMap[currentCategoryKey] || "単語";
+      const catText = getCategoryLabel(currentCategoryKey);
       const modeText = currentMode === 'typing' ? 'タイピング' : '4択選択';
       const mistakesTag = currentMistakesOnly ? ' ・間違えた単語のみ' : '';
       document.getElementById('categorySubtitle').textContent = `${catText}${mistakesTag} [${modeText}] (${currentQuizPool.length}問)`;
@@ -232,7 +310,7 @@
       playSound('click');
       pendingResumeSnapshot = snapshot;
       pendingResumeStartFreshAction = startFreshAction;
-      const catName = categoryNamesMap[snapshot.categoryKey] || "カテゴリー";
+      const catName = getCategoryLabel(snapshot.categoryKey);
       document.getElementById('resumeCategoryName').textContent = catName;
       document.getElementById('resumeModalOverlay').classList.remove('hidden');
     }
@@ -338,9 +416,12 @@
     }
 
     // --- CATEGORY WORD LIST MODAL (preview all words before practicing) ---
+    // Also reused, in "folder" mode, as the folder word editor (bulk add + delete).
     let currentWordListCategory = null;
+    let currentWordListMode = 'builtin'; // 'builtin' | 'folder'
+    let currentWordListFolderId = null;
 
-    function wordListRowHtml(q) {
+    function wordListRowHtml(q, editable) {
       return `
         <div class="flex items-center justify-between gap-2 px-3.5 py-3 rounded-xl bg-zinc-50 border border-zinc-200 hover:border-zinc-300 hover:bg-white transition-colors animate-fade-in">
           <div class="text-sm min-w-0 truncate">
@@ -348,17 +429,53 @@
             <span class="text-zinc-400 mx-1.5">→</span>
             <span class="font-bold text-zinc-600">${escapeHtml(q.answer)}</span>
           </div>
+          ${editable ? `
+          <button onclick="deleteFolderWord('${currentWordListFolderId}', '${q.id}')" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors shrink-0" title="削除">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>` : ''}
         </div>
       `;
     }
 
     function openWordListModal(categoryFilter) {
       playSound('click');
+      currentWordListMode = 'builtin';
+      currentWordListFolderId = null;
       currentWordListCategory = categoryFilter;
       const overlay = document.getElementById('wordListModalOverlay');
       if (!overlay) return;
-      const catName = categoryNamesMap[categoryFilter] || 'カテゴリー';
+      const catName = getCategoryLabel(categoryFilter);
       document.getElementById('wordListModalTitle').textContent = catName + ' 一覧';
+      const bulkSection = document.getElementById('wordListBulkAddSection');
+      if (bulkSection) bulkSection.classList.add('hidden');
+      const editBtn = document.getElementById('wordListEditFolderBtn');
+      if (editBtn) editBtn.classList.add('hidden');
+      const searchInput = document.getElementById('wordListModalSearch');
+      if (searchInput) searchInput.value = '';
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      renderWordListModal();
+      if (searchInput) searchInput.focus();
+    }
+
+    function openFolderWordsModal(folderId) {
+      playSound('click');
+      const folder = customFolders.find(f => f.id === folderId);
+      if (!folder) return;
+      currentWordListMode = 'folder';
+      currentWordListFolderId = folderId;
+      currentWordListCategory = 'folder_' + folderId;
+      const overlay = document.getElementById('wordListModalOverlay');
+      if (!overlay) return;
+      document.getElementById('wordListModalTitle').textContent = folder.name + ' 一覧';
+      const bulkSection = document.getElementById('wordListBulkAddSection');
+      if (bulkSection) bulkSection.classList.remove('hidden');
+      const editBtn = document.getElementById('wordListEditFolderBtn');
+      if (editBtn) editBtn.classList.remove('hidden');
+      const bulkInput = document.getElementById('wordListBulkInput');
+      if (bulkInput) bulkInput.value = '';
+      const bulkError = document.getElementById('wordListBulkError');
+      if (bulkError) bulkError.classList.add('hidden');
       const searchInput = document.getElementById('wordListModalSearch');
       if (searchInput) searchInput.value = '';
       overlay.classList.remove('hidden');
@@ -379,7 +496,8 @@
       const listEl = document.getElementById('wordListModalList');
       if (!listEl || !currentWordListCategory) return;
 
-      const words = rawQuestions.filter(q => q.category === currentWordListCategory);
+      const isFolder = currentWordListMode === 'folder';
+      const words = isFolder ? getPoolForKey(currentWordListCategory) : rawQuestions.filter(q => q.category === currentWordListCategory);
       const searchInput = document.getElementById('wordListModalSearch');
       const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
       const filtered = query
@@ -390,10 +508,62 @@
       if (countEl) countEl.textContent = filtered.length;
 
       if (!filtered.length) {
-        listEl.innerHTML = `<p class="text-sm text-zinc-400 font-bold text-center py-12">該当する単語が見つかりません。</p>`;
+        listEl.innerHTML = `<p class="text-sm text-zinc-400 font-bold text-center py-12">${isFolder ? 'まだ単語が登録されていません。上のフォームから追加してください。' : '該当する単語が見つかりません。'}</p>`;
       } else {
-        listEl.innerHTML = filtered.map(wordListRowHtml).join('');
+        listEl.innerHTML = filtered.map(q => wordListRowHtml(q, isFolder)).join('');
       }
+    }
+
+    function addBulkWordsToCurrentFolder() {
+      if (currentWordListMode !== 'folder' || !currentWordListFolderId) return;
+      playSound('click');
+      const folder = customFolders.find(f => f.id === currentWordListFolderId);
+      const textarea = document.getElementById('wordListBulkInput');
+      const errorEl = document.getElementById('wordListBulkError');
+      if (!folder || !textarea) return;
+
+      const parsed = parseBulkWords(textarea.value);
+      if (!parsed.length) {
+        if (errorEl) {
+          errorEl.textContent = '正しい形式で入力してください。例: con chó,犬;con mèo,猫';
+          errorEl.classList.remove('hidden');
+        }
+        return;
+      }
+      if (errorEl) errorEl.classList.add('hidden');
+
+      parsed.forEach(p => {
+        folder.words.push({
+          id: 'folder_' + folder.id + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
+          category: 'folder_' + folder.id,
+          categoryLabel: folder.name,
+          jp: p.jp,
+          answer: p.vn,
+          altAnswers: []
+        });
+      });
+
+      saveFolders();
+      textarea.value = '';
+      renderWordListModal();
+      renderFolders();
+    }
+
+    function deleteFolderWord(folderId, wordId) {
+      playSound('click');
+      const folder = customFolders.find(f => f.id === folderId);
+      if (!folder) return;
+      folder.words = folder.words.filter(w => w.id !== wordId);
+      saveFolders();
+
+      const key = 'folder_' + folderId;
+      if (progressData[key] && progressData[key].mistakeIds) {
+        progressData[key].mistakeIds = progressData[key].mistakeIds.filter(id => id !== wordId);
+        saveProgress();
+      }
+
+      renderWordListModal();
+      renderFolders();
     }
 
     function startPracticeFromWordList() {
@@ -403,10 +573,138 @@
       openModeModal(cat);
     }
 
+    // --- MY FOLDERS (CUSTOM USER FOLDERS) ---
+    let editingFolderId = null;
+
+    function renderFolders() {
+      const grid = document.getElementById('foldersGrid');
+      if (!grid) return;
+
+      let html = customFolders.map(f => {
+        const key = 'folder_' + f.id;
+        return `
+        <div class="flex flex-col">
+          <button onclick="openModeModal('${key}')" class="p-5 rounded-2xl bg-white border border-zinc-300 hover:border-zinc-700 hover:shadow-md transition-all text-left group flex flex-col justify-between flex-grow relative">
+            <div class="flex items-center justify-between mb-2 gap-2">
+              <span class="font-extrabold text-base text-zinc-700 hover:underline hover:text-zinc-900 cursor-pointer decoration-2 underline-offset-2 truncate" onclick="event.stopPropagation(); openFolderWordsModal('${f.id}')" title="単語リストを見る">${escapeHtml(f.name)}</span>
+              <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300 shrink-0">${f.words.length}語</span>
+            </div>
+            <p class="text-xs text-zinc-500 font-medium">${f.description ? escapeHtml(f.description) : 'フォルダの説明はまだありません。'}</p>
+          </button>
+          <div class="flex gap-2 mt-2">
+            <button id="mistakesBtn-${key}" onclick="startMistakesPractice('${key}')" class="hidden flex-1 px-3 py-2.5 rounded-xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              間違えた単語のみ (<span id="mistakesCount-${key}">0</span>)
+            </button>
+          </div>
+        </div>`;
+      }).join('');
+
+      html += `
+        <button onclick="openFolderCreateModal()" class="p-5 rounded-2xl bg-zinc-50 border-2 border-dashed border-zinc-300 hover:border-zinc-700 hover:bg-white transition-all flex flex-col items-center justify-center gap-2 text-zinc-400 hover:text-zinc-700 min-h-[104px]">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          <span class="text-xs font-extrabold">新しいフォルダを作成</span>
+        </button>
+      `;
+
+      grid.innerHTML = html;
+
+      customFolders.forEach(f => {
+        updateMistakesButton('folder_' + f.id);
+        updateStamp('folder_' + f.id);
+      });
+    }
+
+    function openFolderCreateModal() {
+      playSound('click');
+      editingFolderId = null;
+      document.getElementById('folderEditModalTitle').textContent = '新しいフォルダを作成';
+      document.getElementById('folderNameInput').value = '';
+      document.getElementById('folderDescInput').value = '';
+      document.getElementById('folderDeleteBtn').classList.add('hidden');
+      document.getElementById('folderEditError').classList.add('hidden');
+      const overlay = document.getElementById('folderEditModalOverlay');
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+    }
+
+    function openFolderEditModal(folderId) {
+      playSound('click');
+      const folder = customFolders.find(f => f.id === folderId);
+      if (!folder) return;
+      editingFolderId = folderId;
+      document.getElementById('folderEditModalTitle').textContent = 'フォルダを編集';
+      document.getElementById('folderNameInput').value = folder.name;
+      document.getElementById('folderDescInput').value = folder.description || '';
+      document.getElementById('folderDeleteBtn').classList.remove('hidden');
+      document.getElementById('folderEditError').classList.add('hidden');
+      const overlay = document.getElementById('folderEditModalOverlay');
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+    }
+
+    function closeFolderEditModal() {
+      playSound('click');
+      const overlay = document.getElementById('folderEditModalOverlay');
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+      editingFolderId = null;
+    }
+
+    function saveFolderModal() {
+      playSound('click');
+      const name = document.getElementById('folderNameInput').value.trim();
+      const desc = document.getElementById('folderDescInput').value.trim();
+      const errorEl = document.getElementById('folderEditError');
+
+      if (!name) {
+        errorEl.textContent = 'フォルダ名を入力してください。';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      errorEl.classList.add('hidden');
+
+      if (editingFolderId) {
+        const folder = customFolders.find(f => f.id === editingFolderId);
+        if (folder) {
+          folder.name = name;
+          folder.description = desc;
+          folder.words.forEach(w => { w.categoryLabel = name; });
+        }
+      } else {
+        customFolders.push({
+          id: 'f' + Date.now() + '_' + Math.floor(Math.random() * 100000),
+          name,
+          description: desc,
+          words: []
+        });
+      }
+
+      saveFolders();
+      closeFolderEditModal();
+      renderFolders();
+    }
+
+    function deleteFolderConfirm() {
+      if (!editingFolderId) return;
+      if (!confirm('このフォルダを削除しますか？中の単語もすべて削除されます。')) return;
+      playSound('click');
+
+      const key = 'folder_' + editingFolderId;
+      customFolders = customFolders.filter(f => f.id !== editingFolderId);
+      delete progressData[key];
+      clearInProgressSnapshot(key, false);
+      clearInProgressSnapshot(key, true);
+      saveFolders();
+      saveProgress();
+      closeFolderEditModal();
+      renderFolders();
+    }
+
     function updateMyBookCard() {
       document.getElementById('myWordsCount').textContent = myWords.length;
       const practiceBtn = document.getElementById('myBookPracticeBtn');
-      practiceBtn.disabled = myWords.length === 0;
+      if (practiceBtn) practiceBtn.disabled = myWords.length === 0;
       updateMistakesButton('mybook');
     }
 
@@ -442,6 +740,39 @@
       renderMyWordsList();
       updateMyBookCard();
       jpInput.focus();
+    }
+
+    function addMyWordsBulk() {
+      playSound('click');
+      const textarea = document.getElementById('myWordsBulkInput');
+      const errorEl = document.getElementById('myWordsBulkError');
+      if (!textarea) return;
+
+      const parsed = parseBulkWords(textarea.value);
+      if (!parsed.length) {
+        if (errorEl) {
+          errorEl.textContent = '正しい形式で入力してください。例: con chó,犬;con mèo,猫';
+          errorEl.classList.remove('hidden');
+        }
+        return;
+      }
+      if (errorEl) errorEl.classList.add('hidden');
+
+      parsed.forEach(p => {
+        myWords.push({
+          id: 'my_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
+          category: 'mybook',
+          categoryLabel: 'マイ単語帳',
+          jp: p.jp,
+          answer: p.vn,
+          altAnswers: []
+        });
+      });
+
+      saveMyWords();
+      textarea.value = '';
+      renderMyWordsList();
+      updateMyBookCard();
     }
 
     function deleteMyWord(id) {
@@ -497,10 +828,10 @@
       if (!btn) return;
       btn.classList.add('relative');
 
-      const existing = btn.querySelector('.complete-stamp');
+      const existing = btn.querySelector('.complete-stamp:not(.complete-stamp-multiple)');
       const prog = progressData[categoryKey];
 
-      // "perfect" = fully completed in ONE go with zero mistakes -> red complete stamp.
+      // "perfect" = fully completed in ONE go with zero mistakes (typing) -> red complete stamp.
       // "mastered" = every word has eventually been answered correctly (list fully
       // cleared through resumed / mistakes-only practice, i.e. NOT in one go) ->
       // the semi-completed stamp, until a true one-go run upgrades it to complete.
@@ -523,12 +854,33 @@
       } else if (existing) {
         existing.remove();
       }
+
+      // "perfectMultiple" = fully completed in ONE go with zero mistakes in 4-choice mode.
+      // Placed to the LEFT of the typing/mastered stamp above.
+      const existingMulti = btn.querySelector('.complete-stamp-multiple');
+      const isPerfectMultiple = !!(prog && prog.perfectMultiple);
+
+      if (isPerfectMultiple) {
+        if (!existingMulti) {
+          const img = document.createElement('img');
+          img.src = 'images/multiple_complete.png';
+          img.alt = '4択コンプリート';
+          img.className = 'complete-stamp complete-stamp-multiple';
+          btn.appendChild(img);
+        }
+      } else if (existingMulti) {
+        existingMulti.remove();
+      }
     }
 
     function updateAllCategoryButtons() {
       Object.keys(categoryNamesMap).forEach(key => {
         updateMistakesButton(key);
         updateStamp(key);
+      });
+      customFolders.forEach(f => {
+        updateMistakesButton('folder_' + f.id);
+        updateStamp('folder_' + f.id);
       });
     }
 
@@ -580,7 +932,7 @@
       playSound('click');
       pendingCategory = categoryFilter;
       pendingMistakesOnly = !!mistakesOnly;
-      const catName = categoryNamesMap[categoryFilter] || "カテゴリー";
+      const catName = getCategoryLabel(categoryFilter);
       document.getElementById('modalCategoryName').textContent = pendingMistakesOnly
         ? `対象: ${catName}（間違えた単語のみ）`
         : `対象: ${catName}`;
@@ -613,6 +965,7 @@
       document.getElementById('categorySubtitle').textContent = "全語彙マスター";
       updateAllCategoryButtons();
       updateMyBookCard();
+      renderFolders();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -621,14 +974,9 @@
       const shuffleQuestions = document.getElementById('shuffleQuestionsToggle').checked;
 
       // Reset dynamic multiple choice properties so they get regenerated freshly
-      rawQuestions.forEach(q => delete q._generatedChoices);
+      clearAllGeneratedChoices();
 
-      let filtered = [];
-      if (categoryFilter === 'mybook') {
-        filtered = [...myWords];
-      } else {
-        filtered = rawQuestions.filter(q => q.category === categoryFilter);
-      }
+      let filtered = getPoolForKey(categoryFilter).slice();
 
       if (mistakesOnly) {
         const prog = progressData[categoryFilter];
@@ -652,7 +1000,7 @@
       currentIndex = 0;
       userAnswers = new Array(currentQuizPool.length).fill(null);
 
-      const catText = categoryNamesMap[categoryFilter] || "単語";
+      const catText = getCategoryLabel(categoryFilter);
       const modeText = currentMode === 'typing' ? 'タイピング' : '4択選択';
       const mistakesTag = currentMistakesOnly ? ' ・間違えた単語のみ' : '';
       document.getElementById('categorySubtitle').textContent = `${catText}${mistakesTag} [${modeText}] (${currentQuizPool.length}問)`;
@@ -667,7 +1015,7 @@
 
     function retryCurrentQuiz() {
       playSound('click');
-      rawQuestions.forEach(q => delete q._generatedChoices);
+      clearAllGeneratedChoices();
       currentIndex = 0;
       userAnswers = new Array(currentQuizPool.length).fill(null);
       document.getElementById('resultScreen').classList.add('hidden');
@@ -681,7 +1029,7 @@
       const q = currentQuizPool[currentIndex];
       const answerState = userAnswers[currentIndex];
 
-      document.getElementById('questionCategoryTag').textContent = q.categoryLabel;
+      document.getElementById('questionCategoryTag').textContent = getCategoryLabel(q.category) || q.categoryLabel;
       document.getElementById('questionModeBadge').textContent = currentMode === 'typing' ? 'タイピング' : '4択選択';
       document.getElementById('questionTypeBadge').textContent = currentMode === 'typing' ? '文字入力' : '選択肢タップ';
       document.getElementById('questionCounter').textContent = `Q ${currentIndex + 1} / ${currentQuizPool.length}`;
@@ -725,7 +1073,7 @@
 
         // Generate 4 options (1 correct answer + 3 distinct distractors)
         if (!q._generatedChoices) {
-          const distinctAnswersPool = Array.from(new Set(rawQuestions.filter(item => item.category === q.category && item.answer !== q.answer).map(item => item.answer)));
+          const distinctAnswersPool = Array.from(new Set(getDistractorPool(q).map(item => item.answer)));
           const shuffledOthers = shuffleArray(distinctAnswersPool);
           const distractors = shuffledOthers.slice(0, 3);
           q._generatedChoices = shuffleArray([q.answer, ...distractors]);
@@ -890,7 +1238,6 @@ document.addEventListener('keydown', function (e) {
           <div>
             <div class="font-black text-rose-900 text-base mb-0.5">不正解</div>
             <div class="text-xs sm:text-sm font-bold">模範解答: ${q.answer}</div>
-            ${answerState.selectedOption ? `<div class="text-xs text-rose-700 mt-1">選択した解答: "${answerState.selectedOption}"</div>` : ''}
           </div>
         `;
       }
@@ -966,9 +1313,14 @@ document.addEventListener('keydown', function (e) {
         chosenIds = typingList || multipleList || [];
       }
 
-      // Stamp is earned only by a FULL run (not mistakes-only) with zero mistakes
-      if (!currentMistakesOnly && currentMode === 'typing' && missedIds.length === 0) {
-        prog.perfect = true;
+      // Stamps are earned only by a FULL run (not mistakes-only) with zero mistakes,
+      // tracked independently per mode (typing vs multiple choice).
+      if (!currentMistakesOnly && missedIds.length === 0) {
+        if (currentMode === 'typing') {
+          prog.perfect = true;
+        } else if (currentMode === 'multiple') {
+          prog.perfectMultiple = true;
+        }
       }
 
       prog.completed = true;
@@ -1057,7 +1409,7 @@ document.addEventListener('keydown', function (e) {
 
         card.innerHTML = `
           <div class="flex items-center justify-between text-xs font-extrabold">
-            <span class="text-zinc-400">Q${i + 1} &bull; ${q.categoryLabel}</span>
+            <span class="text-zinc-400">Q${i + 1} &bull; ${getCategoryLabel(q.category) || q.categoryLabel}</span>
             <span class="${isRight ? 'text-zinc-900 bg-zinc-200 border border-zinc-300' : 'text-zinc-800 bg-zinc-300 border border-zinc-400'} px-2.5 py-0.5 rounded-full font-black">
               ${isRight ? '正解' : '不正解'}
             </span>
@@ -1084,9 +1436,27 @@ document.addEventListener('keydown', function (e) {
       }
     });
 
+    // --- TUTORIAL / HOW-TO MODAL ---
+    function openTutorialModal() {
+      playSound('click');
+      const overlay = document.getElementById('tutorialModalOverlay');
+      if (!overlay) return;
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+    }
+
+    function closeTutorialModal() {
+      playSound('click');
+      const overlay = document.getElementById('tutorialModalOverlay');
+      if (!overlay) return;
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+    }
+
     // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', function () {
       renderMyWordsList();
       updateMyBookCard();
       updateAllCategoryButtons();
+      renderFolders();
     });
