@@ -21,16 +21,14 @@
 <header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-zinc-300/80 shadow-sm">
   <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
     <div class="flex items-center space-x-3 cursor-pointer" onclick="showHomeView()">
-      <!-- VN Badge with Pen Icon -->
-      <div class="px-2.5 h-10 rounded-xl bg-zinc-600 text-white flex items-center space-x-1.5 font-extrabold text-sm shadow-md shadow-zinc-400/20">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-        </svg>
-      </div>
-
+      
+      <div class="w-10 h-10 rounded-xl border border-zinc-300/80 flex items-center justify-center shrink-0">
+        <img src="images/logo_icon.png" alt="ロゴ" class="w-7 h-7 object-contain">
+      </div>      
+      
       <div>
-        <h1 class="text-base font-extrabold text-zinc-700 leading-tight tracking-wide">ベトナム語 単語テスト</h1>
-        <p class="text-xs text-zinc-500 font-bold" id="categorySubtitle">語彙マスター</p>
+        <h1 class="text-base font-extrabold text-zinc-700 leading-tight tracking-wide">ベトナム語 単語手帳</h1>
+        <p class="text-xs text-zinc-500 font-bold" id="categorySubtitle">語彙の達人</p>
       </div>
     </div>
 
@@ -244,31 +242,6 @@
         </div>
       </div>
 
-      <!-- MY WORD BOOK (PERSONAL VOCABULARY) -->
-      <div class="bg-white rounded-2xl p-5 border border-zinc-300 shadow-sm space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <h3 class="text-xs font-extrabold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-            <svg class="w-4 h-4 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-            マイ単語帳
-          </h3>
-          <div class="flex items-center gap-2.5">
-            <button onclick="openMyWordsModal()" class="text-xs font-extrabold text-zinc-500 hover:text-zinc-800 underline underline-offset-2 decoration-zinc-300 hover:decoration-zinc-800 transition-colors">すべて見る</button>
-            <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300"><span id="myWordsCount">0</span>語</span>
-          </div>
-        </div>
-        <p class="text-xs text-zinc-500 font-medium -mt-2">自分だけの単語を登録して演習できます。※タイピングモードのみ対応</p>
-
-        <!-- Add word form -->
-<div class="flex flex-col sm:flex-row gap-2.5">
-  <input type="text" id="myWordJp" placeholder="日本語" class="min-w-0 flex-1 px-3.5 py-2.5 rounded-xl border-2 border-zinc-300 focus:border-zinc-700 focus:outline-none text-sm font-bold text-zinc-700 bg-zinc-50/50 transition-colors">
-  <input type="text" id="myWordVn" placeholder="ベトナム語" class="min-w-0 flex-1 px-3.5 py-2.5 rounded-xl border-2 border-zinc-300 focus:border-zinc-700 focus:outline-none text-sm font-bold text-zinc-700 bg-zinc-50/50 transition-colors">
-  <button onclick="addMyWord()" class="px-6 py-2.5 rounded-xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 active:bg-zinc-950 transition-all shadow-md shadow-zinc-400/20 shrink-0 w-full sm:w-auto">
-    追加
-  </button>
-</div>
-        </div>
-        <p id="myWordError" class="hidden text-xs font-bold text-zinc-600 bg-zinc-100 border border-zinc-300 rounded-xl px-3.5 py-2">日本語とベトナム語の両方を入力してください。</p>
-      </div>
     </section>
 
     <!-- RESUME / START FRESH CHOICE MODAL OVERLAY -->
@@ -514,7 +487,6 @@
     ベトナム語 単語暗記マスター &bull; Vietnamese-Japanese Learning Book
   </footer>
 
-  <!-- MY WORDS: FULL LIST VIEWER MODAL -->
   <!-- WORD LIST MODAL (view all words in a category before practicing) -->
   <div id="wordListModalOverlay" class="fixed inset-0 bg-zinc-700/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
     <div class="bg-white rounded-3xl w-full max-w-xl border border-zinc-300 shadow-2xl animate-pop-in relative flex flex-col max-h-[85vh] overflow-hidden">
@@ -573,47 +545,6 @@
         <button onclick="startPracticeFromWordList()" class="px-5 py-2.5 rounded-xl bg-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 active:bg-zinc-950 transition-all shadow-md shadow-zinc-400/20 shrink-0">
           この単語で演習する
         </button>
-      </div>
-    </div>
-  </div>
-
-  <div id="myWordsModalOverlay" class="fixed inset-0 bg-zinc-700/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-3xl w-full max-w-xl border border-zinc-300 shadow-2xl animate-pop-in relative flex flex-col max-h-[85vh] overflow-hidden">
-
-      <!-- Header -->
-      <div class="flex items-center justify-between gap-3 px-6 sm:px-8 pt-6 sm:pt-7 pb-4 border-b border-zinc-200 shrink-0">
-        <div class="min-w-0">
-          <span class="text-xs font-black text-zinc-400 uppercase tracking-widest">My Word Book</span>
-          <h3 class="text-xl sm:text-2xl font-black text-zinc-700 truncate">マイ単語帳 一覧</h3>
-        </div>
-        <button onclick="closeMyWordsModal()" class="p-2 text-zinc-400 hover:text-zinc-800 rounded-full hover:bg-zinc-100 transition-colors shrink-0">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
-
-      <!-- Search -->
-      <div class="px-6 sm:px-8 pt-4 pb-1 shrink-0">
-        <div class="relative">
-          <svg class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-4.35-4.35M17 10.5A6.5 6.5 0 114 10.5a6.5 6.5 0 0113 0z"/></svg>
-          <input
-            type="text"
-            id="myWordsModalSearch"
-            oninput="renderMyWordsList()"
-            placeholder="日本語・ベトナム語で検索"
-            autocomplete="off"
-            class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border-2 border-zinc-300 focus:border-zinc-700 focus:outline-none text-sm font-bold text-zinc-700 bg-zinc-50/50 transition-colors"
-          />
-        </div>
-      </div>
-
-      <!-- Scrollable list -->
-      <div id="myWordsModalList" class="flex-1 overflow-y-auto scroll-smooth px-6 sm:px-8 py-4 space-y-2">
-        <!-- injected via JS -->
-      </div>
-
-      <!-- Footer -->
-      <div class="px-6 sm:px-8 py-3.5 border-t border-zinc-200 text-xs font-bold text-zinc-400 text-center shrink-0">
-        合計 <span id="myWordsModalCount">0</span> 語
       </div>
     </div>
   </div>
@@ -681,7 +612,7 @@
 
         <!-- DATA TAB -->
         <div id="settingsTabData" class="space-y-3">
-          <p class="text-xs text-zinc-500 font-medium leading-relaxed">スタンプ・間違えた単語・マイ単語帳・マイフォルダをまとめてバックアップできます。</p>
+          <p class="text-xs text-zinc-500 font-medium leading-relaxed">スタンプ・間違えた単語・マイフォルダをまとめてバックアップできます。</p>
 
           <button onclick="exportProgressData()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-zinc-300 bg-zinc-50 hover:bg-white hover:border-zinc-700 transition-colors text-left">
             <span class="w-10 h-10 rounded-xl bg-zinc-700 text-white flex items-center justify-center shrink-0">
@@ -749,8 +680,8 @@
           <p class="text-zinc-500 font-medium leading-relaxed pl-7">キーボード操作にも対応しています。タイピングモードでは<span class="font-mono font-bold text-zinc-700">Enter</span>で解答・次へ進み、4択選択モードでは選択肢に表示されているキーを押して選び、<span class="font-mono font-bold text-zinc-700">Enter</span>または<span class="font-mono font-bold text-zinc-700">Space</span>で次の問題へ進めます。使用するキーはヘッダーの<span class="font-extrabold text-zinc-700">⚙（設定）</span>から自由に変更できます。</p>
         </div>
         <div class="space-y-1.5">
-          <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">2</span>マイ単語帳・マイフォルダ</h4>
-          <p class="text-zinc-500 font-medium leading-relaxed pl-7">「マイ単語帳」では自分だけの単語を1つずつ、または一括貼り付けでまとめて登録できます。「マイフォルダ」ではオリジナルのフォルダを作成し、名前や説明を編集・削除でき、コースと同じようにタイピング・4択の両方で演習できます。</p>
+          <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">2</span>マイフォルダ</h4>
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">「マイフォルダ」ではオリジナルのフォルダを作成して自分だけの単語を登録し、名前や説明を編集・削除でき、コースと同じようにタイピング・4択の両方で演習できます。</p>
         </div>
         <div class="space-y-1.5">
           <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">3</span>一括登録フォーマット</h4>
@@ -798,7 +729,7 @@
         </div>
         <div class="space-y-1.5">
           <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">7</span>データのバックアップ・復元</h4>
-          <p class="text-zinc-500 font-medium leading-relaxed pl-7">ヘッダーの<span class="font-extrabold text-zinc-700">⚙（設定）</span>アイコンから「データ」タブを開くと、「バックアップを保存」でスタンプ・間違えた単語・マイ単語帳・マイフォルダをすべて含むファイルがダウンロードされ、「バックアップから復元」でそのファイルを選ぶと以前の状態に戻せます（現在のデータは上書きされるのでご注意ください）。ブラウザのデータが消える前に、定期的な保存をおすすめします。</p>
+          <p class="text-zinc-500 font-medium leading-relaxed pl-7">ヘッダーの<span class="font-extrabold text-zinc-700">⚙（設定）</span>アイコンから「データ」タブを開くと、「バックアップを保存」でスタンプ・間違えた単語・マイフォルダをすべて含むファイルがダウンロードされ、「バックアップから復元」でそのファイルを選ぶと以前の状態に戻せます（現在のデータは上書きされるのでご注意ください）。ブラウザのデータが消える前に、定期的な保存をおすすめします。</p>
         </div>
         <div class="space-y-1.5">
           <h4 class="font-extrabold text-zinc-800 flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-zinc-700 text-white text-xs flex items-center justify-center font-black shrink-0">8</span>4択選択のキーを自由に設定</h4>
