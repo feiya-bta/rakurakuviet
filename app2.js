@@ -497,20 +497,14 @@
       let html = customFolders.map(f => {
         const key = 'folder_' + f.id;
         return `
-        <div class="flex flex-col">
-          <button onclick="openModeModal('${key}')" class="p-5 rounded-2xl bg-white border border-zinc-300 hover:border-zinc-700 hover:shadow-md transition-all text-left group flex flex-col justify-between flex-grow relative">
-            <div class="flex items-center justify-between mb-2 gap-2">
+        <div class="group rounded-2xl bg-white border border-zinc-300 hover:border-zinc-700 hover:shadow-md transition-all overflow-hidden flex flex-col">
+          <button onclick="openModeModal('${key}')" class="p-5 text-left w-full flex flex-col gap-2 flex-grow relative">
+            <div class="flex items-center justify-between gap-2">
               <span class="font-extrabold text-base text-zinc-700 hover:underline hover:text-zinc-900 cursor-pointer decoration-2 underline-offset-2 truncate" onclick="event.stopPropagation(); openFolderWordsModal('${f.id}')" title="単語リストを見る">${escapeHtml(f.name)}</span>
               <span class="text-xs font-black px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-800 border border-zinc-300 shrink-0">${f.words.length}語</span>
             </div>
             <p class="text-xs text-zinc-500 font-medium">${f.description ? escapeHtml(f.description) : 'フォルダの説明はまだありません。'}</p>
           </button>
-          <div class="flex gap-2 mt-2">
-            <button id="mistakesBtn-${key}" onclick="startMistakesPractice('${key}')" class="hidden flex-1 px-3 py-2.5 rounded-xl border border-zinc-300 bg-zinc-50 hover:bg-zinc-700 hover:text-white hover:border-zinc-700 text-zinc-600 text-xs font-extrabold transition-colors items-center justify-center gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              間違えた単語のみ (<span id="mistakesCount-${key}">0</span>)
-            </button>
-          </div>
         </div>`;
       }).join('');
 
@@ -730,11 +724,41 @@
       playSound('click');
       pendingCategory = categoryFilter;
       pendingMistakesOnly = !!mistakesOnly;
-      const catName = getCategoryLabel(categoryFilter);
+      updateModeScopeUI();
+      document.getElementById('modeModalOverlay').classList.remove('hidden');
+    }
+
+    function getMistakeCount(categoryKey) {
+      const prog = progressData[categoryKey];
+      if (!prog || !prog.completed || !prog.mistakeIds) return 0;
+      const ids = new Set(getPoolForKey(categoryKey).map(q => q.id));
+      return prog.mistakeIds.filter(id => ids.has(id)).length;
+    }
+
+    function updateModeScopeUI() {
+      const catName = getCategoryLabel(pendingCategory);
+      const mistakeCount = getMistakeCount(pendingCategory);
+      if (mistakeCount === 0) pendingMistakesOnly = false;
+
       document.getElementById('modalCategoryName').textContent = pendingMistakesOnly
         ? `対象: ${catName}（間違えた単語のみ）`
         : `対象: ${catName}`;
-      document.getElementById('modeModalOverlay').classList.remove('hidden');
+
+      const section = document.getElementById('modeScopeSection');
+      section.classList.toggle('hidden', mistakeCount === 0);
+      document.getElementById('scopeAllCount').textContent = getPoolForKey(pendingCategory).length;
+      document.getElementById('scopeMistakesCount').textContent = mistakeCount;
+
+      const active = 'px-3 py-2.5 rounded-xl transition-all bg-white text-zinc-900 shadow-sm';
+      const inactive = 'px-3 py-2.5 rounded-xl transition-all text-zinc-500 hover:text-zinc-800';
+      document.getElementById('scopeAllBtn').className = pendingMistakesOnly ? inactive : active;
+      document.getElementById('scopeMistakesBtn').className = (pendingMistakesOnly ? active : inactive) + ' flex items-center justify-center gap-1.5';
+    }
+
+    function setModeScope(mistakesOnly) {
+      playSound('click');
+      pendingMistakesOnly = !!mistakesOnly;
+      updateModeScopeUI();
     }
 
     function closeModeModal() {
@@ -746,7 +770,14 @@
       playSound('click');
       currentMode = mode;
       document.getElementById('modeModalOverlay').classList.add('hidden');
-      startQuiz(pendingCategory, pendingMistakesOnly);
+      const cat = pendingCategory, mo = pendingMistakesOnly;
+      // A saved in-progress run may exist for the "mistakes only" scope chosen inside this modal
+      const snap = mo ? getInProgressSnapshot(cat, true) : null;
+      if (snap) {
+        openResumeChoiceModal(snap, () => startQuiz(cat, mo));
+        return;
+      }
+      startQuiz(cat, mo);
     }
 
     // --- NAVIGATION & VIEWS ---
