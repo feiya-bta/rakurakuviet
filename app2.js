@@ -329,6 +329,97 @@
       return div.innerHTML;
     }
 
+    // --- DUPLICATE CHECK: search & detect repeated words within the user's custom folders ---
+    // Only checks words the user has added to "マイフォルダ" - built-in categories are excluded.
+    // Matching keeps Vietnamese accent marks intact (case-insensitive, trimmed only).
+
+    function normalizeExact(str) {
+      return str ? str.trim().toLowerCase().replace(/\s+/g, ' ') : '';
+    }
+
+    function getAllFolderWordsFlat() {
+      const all = [];
+      customFolders.forEach(f => {
+        f.words.forEach(w => {
+          all.push({ id: w.id, jp: w.jp, answer: w.answer, folderId: f.id, folderName: f.name });
+        });
+      });
+      return all;
+    }
+
+    function buildDuplicateGroups() {
+      const all = getAllFolderWordsFlat();
+      const map = {};
+      all.forEach(w => {
+        const key = normalizeExact(w.answer);
+        if (!key) return;
+        if (!map[key]) map[key] = [];
+        map[key].push(w);
+      });
+      return map;
+    }
+
+    function renderDupTab() {
+      const searchInput = document.getElementById('dupSearchInput');
+      const listEl = document.getElementById('dupResultsList');
+      const countEl = document.getElementById('dupCount');
+      if (!listEl) return;
+
+      const query = searchInput ? searchInput.value.trim() : '';
+      const map = buildDuplicateGroups();
+      const dupKeys = Object.keys(map).filter(k => map[k].length > 1);
+      if (countEl) countEl.textContent = dupKeys.length;
+
+      let keysToShow;
+      let emptyMessage;
+
+      if (query) {
+        const normQuery = normalizeExact(query);
+        const lowerQuery = query.toLowerCase();
+        keysToShow = Object.keys(map).filter(k =>
+          k.includes(normQuery) || map[k].some(w => w.jp.toLowerCase().includes(lowerQuery))
+        );
+        emptyMessage = '該当する単語が見つかりません。';
+      } else {
+        keysToShow = dupKeys;
+        emptyMessage = 'マイフォルダ内に重複している単語は見つかりませんでした。';
+      }
+
+      if (!keysToShow.length) {
+        listEl.innerHTML = `<p class="text-xs text-zinc-400 font-bold text-center py-8">${emptyMessage}</p>`;
+        return;
+      }
+
+      keysToShow.sort((a, b) => map[b].length - map[a].length);
+
+      listEl.innerHTML = keysToShow.map(k => {
+        const items = map[k];
+        const isDup = items.length > 1;
+        const rows = items.map(w => `
+          <div class="flex items-center justify-between gap-2 py-1.5 px-2.5 rounded-lg bg-white border border-zinc-200">
+            <span class="text-xs font-bold text-zinc-700 truncate">${escapeHtml(w.jp)} <span class="text-zinc-300 mx-1">→</span> ${escapeHtml(w.answer)}</span>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-500 border border-zinc-200">${escapeHtml(w.folderName)}</span>
+              <button onclick="deleteDupWord('${w.folderId}', '${w.id}')" class="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-rose-700 transition-colors" title="削除">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+        `).join('');
+        return `
+          <div class="rounded-xl border ${isDup ? 'border-rose-300 bg-rose-50/50' : 'border-zinc-200 bg-zinc-50'} p-2.5 space-y-1.5 animate-fade-in">
+            ${isDup ? `<div class="text-[10px] font-black text-rose-700 uppercase tracking-wide px-0.5">重複 &times; ${items.length}</div>` : ''}
+            ${rows}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function deleteDupWord(folderId, wordId) {
+      deleteFolderWord(folderId, wordId);
+      renderDupTab();
+    }
+
     // --- CATEGORY WORD LIST MODAL (preview all words before practicing) ---
     // Also reused, in "folder" mode, as the folder word editor (bulk add + delete).
     let currentWordListCategory = null;
@@ -1356,24 +1447,33 @@ document.addEventListener('keydown', function (e) {
       playSound('click');
       const dataTab = document.getElementById('settingsTabData');
       const keysTab = document.getElementById('settingsTabKeys');
+      const dupTab = document.getElementById('settingsTabDup');
       const dataBtn = document.getElementById('settingsTabDataBtn');
       const keysBtn = document.getElementById('settingsTabKeysBtn');
-      if (!dataTab || !keysTab || !dataBtn || !keysBtn) return;
+      const dupBtn = document.getElementById('settingsTabDupBtn');
+      if (!dataTab || !keysTab || !dupTab || !dataBtn || !keysBtn || !dupBtn) return;
 
       const activeClass = 'px-3.5 py-1.5 rounded-lg transition-all bg-white text-zinc-900 shadow-sm';
       const inactiveClass = 'px-3.5 py-1.5 rounded-lg transition-all text-zinc-500 hover:text-zinc-800';
 
+      dataTab.classList.add('hidden');
+      keysTab.classList.add('hidden');
+      dupTab.classList.add('hidden');
+      dataBtn.className = inactiveClass;
+      keysBtn.className = inactiveClass;
+      dupBtn.className = inactiveClass;
+
       if (tab === 'keys') {
-        dataTab.classList.add('hidden');
         keysTab.classList.remove('hidden');
-        dataBtn.className = inactiveClass;
         keysBtn.className = activeClass;
         renderKeybindGrid();
+      } else if (tab === 'dup') {
+        dupTab.classList.remove('hidden');
+        dupBtn.className = activeClass;
+        renderDupTab();
       } else {
         dataTab.classList.remove('hidden');
-        keysTab.classList.add('hidden');
         dataBtn.className = activeClass;
-        keysBtn.className = inactiveClass;
       }
     }
 

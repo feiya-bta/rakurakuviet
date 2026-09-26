@@ -558,7 +558,7 @@
 
   <!-- SETTINGS MODAL (DATA BACKUP + KEY BINDINGS) -->
   <div id="settingsModalOverlay" class="fixed inset-0 bg-zinc-700/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-3xl w-full max-w-lg border border-zinc-300 shadow-2xl animate-pop-in relative flex flex-col max-h-[85vh] overflow-hidden">
+    <div class="bg-white rounded-3xl w-full max-w-lg border border-zinc-300 shadow-2xl animate-pop-in relative flex flex-col max-h-[85vh] sm:h-[85vh] overflow-hidden">
 
       <!-- Header -->
       <div class="flex items-center justify-between gap-3 px-6 sm:px-8 pt-6 sm:pt-7 pb-4 border-b border-zinc-200 shrink-0">
@@ -576,6 +576,7 @@
         <div class="inline-flex p-1 bg-zinc-100 rounded-xl text-xs font-bold border border-zinc-200">
           <button id="settingsTabDataBtn" onclick="switchSettingsTab('data')" class="px-3.5 py-1.5 rounded-lg transition-all">データ</button>
           <button id="settingsTabKeysBtn" onclick="switchSettingsTab('keys')" class="px-3.5 py-1.5 rounded-lg transition-all">キー設定</button>
+          <button id="settingsTabDupBtn" onclick="switchSettingsTab('dup')" class="px-3.5 py-1.5 rounded-lg transition-all">重複チェック</button>
         </div>
       </div>
 
@@ -620,6 +621,29 @@
           <button onclick="resetKeybinds()" class="text-xs font-extrabold text-zinc-500 hover:text-zinc-800 underline underline-offset-2 decoration-zinc-300 hover:decoration-zinc-800 transition-colors">
             デフォルト（A・B・C・D）に戻す
           </button>
+        </div>
+
+        <!-- DUPLICATE CHECK TAB (custom folders only) -->
+        <div id="settingsTabDup" class="hidden space-y-3">
+          <div class="relative">
+            <svg class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-4.35-4.35M17 10.5A6.5 6.5 0 114 10.5a6.5 6.5 0 0113 0z"/></svg>
+            <input
+              type="text"
+              id="dupSearchInput"
+              oninput="renderDupTab()"
+              placeholder="ベトナム語・日本語で検索（例: mèo, 猫）"
+              autocomplete="off"
+              class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border-2 border-zinc-300 focus:border-zinc-700 focus:outline-none text-sm font-bold text-zinc-700 bg-zinc-50/50 transition-colors"
+            />
+          </div>
+
+          <div class="flex items-center justify-between px-0.5">
+            <span class="text-xs font-extrabold text-zinc-500">重複している単語: <span id="dupCount" class="text-rose-700">0</span> 件</span>
+          </div>
+
+          <div id="dupResultsList" class="space-y-2 max-h-72 overflow-y-auto pr-1">
+            <!-- injected via JS -->
+          </div>
         </div>
       </div>
 
